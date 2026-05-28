@@ -1,207 +1,147 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 # Claude OS Disk Installer
-# Installs Claude OS from live environment to a physical/virtual disk
-# Run from the Claude OS live session as root
+# Run from inside the LIVE Claude OS environment to install to a physical disk.
+# This script is entirely self-contained — no external packages needed.
 
-set -euo pipefail
+set -e
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
-BOLD='\033[1m'; CYAN='\033[0;36m'; RESET='\033[0m'
+BOLD='\033[1m'; RESET='\033[0m'
 
-log()  { echo -e "${BOLD}[installer]${RESET} $*"; }
-ok()   { echo -e "${GREEN}✓${RESET} $*"; }
-err()  { echo -e "${RED}✗${RESET} $*" >&2; }
-warn() { echo -e "${YELLOW}⚠${RESET} $*"; }
+log()  { printf "${BOLD}[installer]${RESET} %s\n" "$*"; }
+ok()   { printf "${GREEN}✓${RESET} %s\n" "$*"; }
+err()  { printf "${RED}✗${RESET} %s\n" "$*" >&2; }
+warn() { printf "${YELLOW}⚠${RESET} %s\n" "$*"; }
+
+if [ "$(id -u)" -ne 0 ]; then
+    err "Run as root: sudo $0 [disk]"
+    exit 1
+fi
 
 TARGET_DISK="${1:-}"
 HOSTNAME="${2:-claudeos}"
 USERNAME="${3:-claude}"
 
-banner() {
-cat <<'EOF'
-
-  Claude OS Installer
-  ════════════════════════════════════════════════
-
-EOF
-}
-
-check_root() {
-    if [[ $EUID -ne 0 ]]; then
-        err "This installer must be run as root."
-        echo "  sudo $0 [disk] [hostname] [username]"
-        exit 1
-    fi
-}
-
-select_disk() {
-    if [[ -z "$TARGET_DISK" ]]; then
-        echo ""
-        echo "${BOLD}Available disks:${RESET}"
-        lsblk -d -o NAME,SIZE,MODEL --noheadings | grep -v "loop\|sr" | \
-            while read -r name size model; do
-                echo "  /dev/${name}  (${size})  ${model}"
-            done
-        echo ""
-        read -rp "Enter target disk (e.g., sda): " disk_input
-        TARGET_DISK="/dev/${disk_input}"
-    fi
-
-    if [[ ! -b "$TARGET_DISK" ]]; then
-        err "Not a valid block device: $TARGET_DISK"
-        exit 1
-    fi
-}
-
-confirm_install() {
+# ── Disk selection ────────────────────────────────────────────────────────────
+if [ -z "$TARGET_DISK" ]; then
     echo ""
-    warn "WARNING: This will ERASE ALL DATA on ${TARGET_DISK}"
+    log "Available disks:"
+    lsblk -d -o NAME,SIZE,MODEL 2>/dev/null | grep -v "^NAME\|loop\|sr" || fdisk -l 2>/dev/null | grep "^Disk /dev"
     echo ""
-    echo "  Target disk: ${TARGET_DISK}"
-    echo "  Hostname:    ${HOSTNAME}"
-    echo "  Username:    ${USERNAME}"
-    echo ""
-    read -rp "Type 'yes' to continue: " confirm
-    if [[ "$confirm" != "yes" ]]; then
-        echo "Installation cancelled."
-        exit 0
-    fi
-}
+    printf "Enter target disk (e.g. sda): "
+    read -r disk_input
+    TARGET_DISK="/dev/${disk_input}"
+fi
 
-partition_disk() {
-    log "Partitioning ${TARGET_DISK}..."
-    # GPT partition table
-    # 1: EFI (512MB)
-    # 2: root (remaining)
-    parted -s "${TARGET_DISK}" \
-        mklabel gpt \
-        mkpart ESP fat32 1MiB 513MiB \
-        set 1 esp on \
-        mkpart primary ext4 513MiB 100%
-    partprobe "${TARGET_DISK}"
-    sleep 2
+if [ ! -b "$TARGET_DISK" ]; then
+    err "Not a block device: $TARGET_DISK"
+    exit 1
+fi
 
-    # Determine partition names (handle nvme0n1p1 vs sda1)
-    if [[ "$TARGET_DISK" =~ nvme|mmcblk ]]; then
-        EFI_PART="${TARGET_DISK}p1"
-        ROOT_PART="${TARGET_DISK}p2"
-    else
-        EFI_PART="${TARGET_DISK}1"
-        ROOT_PART="${TARGET_DISK}2"
-    fi
+# ── Confirmation ──────────────────────────────────────────────────────────────
+echo ""
+warn "WARNING: ALL DATA on ${TARGET_DISK} will be ERASED"
+echo "  Disk: ${TARGET_DISK}"
+echo ""
+printf "Type 'yes' to continue: "
+read -r confirm
+[ "$confirm" = "yes" ] || { echo "Cancelled."; exit 0; }
 
-    log "Formatting partitions..."
-    mkfs.fat -F32 -n EFI "${EFI_PART}"
-    mkfs.ext4 -L "CLAUDEOS" -q "${ROOT_PART}"
-    ok "Disk partitioned and formatted"
-}
+# ── Partition ─────────────────────────────────────────────────────────────────
+log "Partitioning ${TARGET_DISK}..."
+# GPT: 512 MB EFI + rest for root
+printf 'label: gpt\n,512M,U\n,,L\n' | sfdisk "$TARGET_DISK" --quiet
 
-mount_target() {
-    log "Mounting target..."
-    mkdir -p /mnt/claudeos
-    mount "${ROOT_PART}" /mnt/claudeos
-    mkdir -p /mnt/claudeos/boot/efi
-    mount "${EFI_PART}" /mnt/claudeos/boot/efi
-    ok "Target mounted at /mnt/claudeos"
-}
+# Detect partition names (nvme uses p1/p2, others use 1/2)
+case "$TARGET_DISK" in
+    *nvme*|*mmcblk*) EFI="${TARGET_DISK}p1"; ROOT="${TARGET_DISK}p2" ;;
+    *)                EFI="${TARGET_DISK}1";  ROOT="${TARGET_DISK}2"  ;;
+esac
 
-copy_system() {
-    log "Copying system files (this takes a few minutes)..."
-    # If running from live, unsquash the live filesystem
-    if [[ -f /run/live/medium/live/filesystem.squashfs ]]; then
-        unsquashfs -d /mnt/claudeos/ /run/live/medium/live/filesystem.squashfs
-    else
-        rsync -aAX --exclude={"/dev/*","/proc/*","/sys/*","/tmp/*","/run/*","/mnt/*","/media/*"} \
-            / /mnt/claudeos/
-    fi
-    ok "System copied"
-}
+# Format
+mkfs.fat -F32 -n EFI "$EFI"
+mkfs.ext4 -L CLAUDEOS -q "$ROOT"
+ok "Disk partitioned and formatted"
 
-install_bootloader() {
-    log "Installing GRUB bootloader..."
-    mount --bind /dev  /mnt/claudeos/dev
-    mount --bind /proc /mnt/claudeos/proc
-    mount --bind /sys  /mnt/claudeos/sys
+# ── Mount and copy ────────────────────────────────────────────────────────────
+log "Mounting target..."
+mkdir -p /mnt/claudeos /mnt/claudeos/boot/efi
+mount "$ROOT" /mnt/claudeos
+mount "$EFI" /mnt/claudeos/boot/efi
 
-    # Generate fstab
-    ROOT_UUID=$(blkid -s UUID -o value "${ROOT_PART}")
-    EFI_UUID=$(blkid -s UUID -o value "${EFI_PART}")
-    cat > /mnt/claudeos/etc/fstab <<FSTAB
-# Claude OS /etc/fstab
+log "Copying live filesystem to disk..."
+# If running from squashfs live, unsquash it
+SQUASH="/run/live/medium/live/filesystem.squashfs"
+if [ -f "$SQUASH" ]; then
+    unsquashfs -d /mnt/claudeos/ "$SQUASH"
+    ok "Filesystem copied from live squashfs"
+else
+    # Fallback: rsync running OS
+    rsync -aAX --progress \
+        --exclude={"/proc/*","/sys/*","/dev/*","/run/*","/tmp/*","/mnt/*"} \
+        / /mnt/claudeos/
+    ok "Filesystem copied"
+fi
+
+# Copy kernel + initrd
+cp /boot/vmlinuz* /mnt/claudeos/boot/ 2>/dev/null || true
+cp /boot/initrd* /mnt/claudeos/boot/ 2>/dev/null || true
+
+# ── fstab ─────────────────────────────────────────────────────────────────────
+ROOT_UUID=$(blkid -s UUID -o value "$ROOT")
+EFI_UUID=$(blkid -s UUID -o value "$EFI")
+cat > /mnt/claudeos/etc/fstab <<FSTAB
 UUID=${ROOT_UUID}  /          ext4  defaults,noatime  0 1
 UUID=${EFI_UUID}   /boot/efi  vfat  defaults          0 2
 tmpfs              /tmp       tmpfs defaults           0 0
 FSTAB
+ok "fstab written"
 
-    # Install GRUB
-    chroot /mnt/claudeos grub-install \
-        --target=x86_64-efi \
-        --efi-directory=/boot/efi \
-        --bootloader-id=ClaudeOS \
-        --recheck 2>/dev/null || \
-    chroot /mnt/claudeos grub-install \
-        --target=i386-pc \
-        "${TARGET_DISK}" 2>/dev/null || true
+# ── GRUB ──────────────────────────────────────────────────────────────────────
+log "Installing GRUB bootloader..."
+for bind in dev proc sys; do
+    mount --bind "/$bind" "/mnt/claudeos/$bind" 2>/dev/null || true
+done
 
-    # GRUB config
-    cp "$(dirname "$0")/../bootloader/grub.cfg" /mnt/claudeos/boot/grub/grub.cfg
-    chroot /mnt/claudeos update-grub 2>/dev/null || true
+# Install GRUB into the chroot
+chroot /mnt/claudeos grub-install \
+    --target=x86_64-efi \
+    --efi-directory=/boot/efi \
+    --bootloader-id=ClaudeOS \
+    --recheck 2>/dev/null || \
+chroot /mnt/claudeos grub-install \
+    --target=i386-pc "$TARGET_DISK" 2>/dev/null || \
+warn "GRUB install had warnings — boot may need manual fix"
 
-    # Cleanup bind mounts
-    umount /mnt/claudeos/{dev,proc,sys} 2>/dev/null || true
-    ok "Bootloader installed"
-}
+chroot /mnt/claudeos grub-mkconfig -o /boot/grub/grub.cfg 2>/dev/null || true
 
-configure_system() {
-    log "Configuring installed system..."
+for bind in dev proc sys; do
+    umount "/mnt/claudeos/$bind" 2>/dev/null || true
+done
 
-    # Hostname
-    echo "$HOSTNAME" > /mnt/claudeos/etc/hostname
-
-    # hosts
-    cat > /mnt/claudeos/etc/hosts <<HOSTS
+# ── Hostname + user ───────────────────────────────────────────────────────────
+log "Configuring system..."
+echo "$HOSTNAME" > /mnt/claudeos/etc/hostname
+cat > /mnt/claudeos/etc/hosts <<HOSTS
 127.0.0.1   localhost
 127.0.1.1   ${HOSTNAME}
-::1         localhost ip6-localhost ip6-loopback
 HOSTS
 
-    # Create user if needed
-    if ! grep -q "^${USERNAME}:" /mnt/claudeos/etc/passwd; then
-        chroot /mnt/claudeos useradd -m -s /bin/bash -G sudo,audio,video "${USERNAME}"
-        echo "${USERNAME}:claude" | chroot /mnt/claudeos chpasswd
-    fi
+# Create user if not exists
+if ! grep -q "^${USERNAME}:" /mnt/claudeos/etc/passwd 2>/dev/null; then
+    chroot /mnt/claudeos adduser -s /bin/sh -D "$USERNAME" 2>/dev/null || \
+    chroot /mnt/claudeos useradd -m -s /bin/bash "$USERNAME" 2>/dev/null || true
+    printf "%s:claude\n" "$USERNAME" | chroot /mnt/claudeos chpasswd 2>/dev/null || true
+fi
 
-    ok "System configured: hostname=${HOSTNAME}, user=${USERNAME}"
-}
+# ── Finish ────────────────────────────────────────────────────────────────────
+sync
+umount /mnt/claudeos/boot/efi 2>/dev/null || true
+umount /mnt/claudeos 2>/dev/null || true
 
-finalize() {
-    log "Finalizing..."
-    sync
-    umount /mnt/claudeos/boot/efi 2>/dev/null || true
-    umount /mnt/claudeos 2>/dev/null || true
-    ok "Unmounted cleanly"
-
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  ${GREEN}Claude OS installed successfully!${RESET}"
-    echo ""
-    echo "  Disk:     ${TARGET_DISK}"
-    echo "  User:     ${USERNAME} / password: claude"
-    echo "  Hostname: ${HOSTNAME}"
-    echo ""
-    echo "  Remove the installation media and reboot."
-    echo "  First boot will complete setup automatically."
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-}
-
-# ── Main ──────────────────────────────────────────────────────────────────────
-banner
-check_root
-select_disk
-confirm_install
-partition_disk
-mount_target
-copy_system
-install_bootloader
-configure_system
-finalize
+echo ""
+printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
+ok "Claude OS installed to ${TARGET_DISK}"
+echo "  Login: ${USERNAME} / password: claude"
+echo "  Remove installation media and reboot."
+printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
