@@ -1,0 +1,15 @@
+#!/sbin/openrc-run
+# Claude OS GUI — OpenRC service (Alpine uses OpenRC, not systemd)
+
+description="Claude OS Desktop GUI"
+command="/usr/local/bin/claude-gui-start"
+command_background=true
+pidfile="/run/claude-gui.pid"
+output_log="/var/log/claude-gui.log"
+error_log="/var/log/claude-gui.log"
+start_stop_daemon_args="--user claude"
+
+depend() {
+    need net
+    after localmount
+}

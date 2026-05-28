@@ -110,7 +110,15 @@ ENV BLACKBOX_MODEL=claude-sonnet-4-6
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+# ── GUI (pre-built dist) ──────────────────────────────────────────────────────
+COPY gui/ /usr/local/share/claude-os/gui/
+RUN if command -v bun >/dev/null 2>&1; then \
+      cd /usr/local/share/claude-os/gui && bun install --frozen-lockfile 2>/dev/null || bun install; \
+    fi
+
 WORKDIR /workspace
+
+EXPOSE 3000 4000 5001
 
 # Pass API key at runtime: docker run -e ANTHROPIC_API_KEY=sk-ant-... claude-os
 CMD ["/bin/bash", "--login"]
