@@ -169,30 +169,32 @@ BASHRC
     ok "Shell configured"
 }
 
-api_key_prompt() {
-    if [[ -z "${ANTHROPIC_API_KEY:-}" ]]; then
-        echo ""
-        echo "┌─────────────────────────────────────────────────────────┐"
-        echo "│              Claude OS — API Key Setup                  │"
-        echo "├─────────────────────────────────────────────────────────┤"
-        echo "│  To use Hermes, Blackbox, and Claude Code you need an   │"
-        echo "│  Anthropic API key from https://console.anthropic.com   │"
-        echo "│                                                         │"
-        echo "│  Add to your shell:                                     │"
-        echo "│  echo 'export ANTHROPIC_API_KEY=sk-ant-...' >> ~/.bashrc│"
-        echo "│                                                         │"
-        echo "│  Or store it securely:                                  │"
-        echo "│  echo 'sk-ant-...' > ~/.claude/api_key                  │"
-        echo "│  chmod 600 ~/.claude/api_key                            │"
-        echo "└─────────────────────────────────────────────────────────┘"
-        echo ""
+run_tool_wizard() {
+    # Launch the interactive tool selection wizard.
+    # Runs as the claude user so it has the right home directory.
+    log "Launching AI tool selection wizard..."
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  Claude OS — AI Tool Setup"
+    echo "  Choose which AI coding tools to install."
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
+    # Run wizard as the claude user
+    if id "${CLAUDE_USER}" &>/dev/null; then
+        su -c "python3 /usr/local/bin/claude-os-setup" "${CLAUDE_USER}" || \
+        python3 /usr/local/bin/claude-os-setup || \
+        log "Tool wizard skipped — run 'claude-os-setup' after login"
+    else
+        python3 /usr/local/bin/claude-os-setup || \
+        log "Tool wizard skipped — run 'claude-os-setup' after login"
     fi
 }
 
 mark_first_boot_done() {
+    mkdir -p /var/lib/claude-os
     touch /var/lib/claude-os/.first-boot-complete
     echo "$(date -Iseconds)" > /var/lib/claude-os/install-date
-    mkdir -p /var/lib/claude-os
     ok "First boot setup complete"
 }
 
@@ -211,13 +213,26 @@ main() {
     install_skills
     copy_claude_config
     setup_shell
-    api_key_prompt
+
+    # ── Interactive tool wizard ────────────────────────────────────────────────
+    # Runs on first boot when a TTY is available (live or installed system).
+    # If no TTY (headless/CI), skip and print instructions.
+    if [ -t 0 ]; then
+        run_tool_wizard
+    else
+        echo ""
+        echo "  Headless boot detected — skipping interactive tool wizard."
+        echo "  Run 'claude-os-setup' after logging in to choose your AI tools."
+        echo ""
+    fi
+
     mark_first_boot_done
 
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "  Claude OS is ready. Log in as: claude / password: claude"
-    echo "  Run `claude-doctor` to verify your setup."
+    echo "  Run 'claude-os-setup'   to manage AI tools"
+    echo "  Run 'claude-doctor'     to verify your setup"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 }

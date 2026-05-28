@@ -69,6 +69,18 @@ echo "${BOLD}── Claude OS Tools ──────────────�
 check "hermes"          "which hermes"
 check "blackbox"        "which blackbox"
 check "skills"          "which skills"
+check "claude-os-setup" "which claude-os-setup"
+
+echo ""
+echo "${BOLD}── Optional AI Tools ───────────────────────────${RESET}"
+for tool in opencode codex aider goose sweagent openclaw openhands; do
+    if command -v "$tool" &>/dev/null; then
+        printf "  %b %-30s %s\n" "${PASS}" "$tool" "$(command -v $tool)"
+    else
+        printf "  %b %-30s %s\n" "${WARN}" "$tool" "not installed"
+    fi
+done
+echo "  ${DIM}→ Run 'claude-os-setup' to add more tools${RESET}"
 
 echo ""
 echo "${BOLD}── Environment ─────────────────────────────────${RESET}"

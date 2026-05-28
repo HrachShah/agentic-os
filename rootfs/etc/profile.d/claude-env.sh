@@ -57,3 +57,17 @@ export TERM="${TERM:-xterm-256color}"
 # ── Locale ────────────────────────────────────────────────────────────────────
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
+
+# ── First-login tool wizard trigger ──────────────────────────────────────────
+# If tools have never been configured and we have a real TTY, launch the wizard.
+_TOOLS_CONFIG="${CLAUDE_HOME:-$HOME}/.claude/claude-os-tools.json"
+if [[ ! -f "$_TOOLS_CONFIG" ]] && [[ -t 0 ]] && [[ -z "$CLAUDE_OS_SETUP_DONE" ]]; then
+    export CLAUDE_OS_SETUP_DONE=1
+    echo ""
+    echo "  Welcome to Claude OS! Let's set up your AI tools."
+    echo "  (Press Ctrl+C to skip and run 'claude-os-setup' later)"
+    echo ""
+    sleep 2
+    python3 /usr/local/bin/claude-os-setup 2>/dev/null || true
+fi
+unset _TOOLS_CONFIG

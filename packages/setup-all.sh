@@ -148,6 +148,16 @@ install_claude_doctor() {
     ok "claude-doctor installed"
 }
 
+install_setup_wizard() {
+    log "Installing claude-os-setup (tool selection wizard)..."
+    sudo cp "${ROOT_DIR}/rootfs/usr/local/bin/claude-os-setup" /usr/local/bin/claude-os-setup
+    sudo chmod +x /usr/local/bin/claude-os-setup
+    sudo mkdir -p /usr/local/share/claude-os/setup
+    sudo cp "${ROOT_DIR}/rootfs/usr/local/share/claude-os/setup/tool-installers.sh" \
+        /usr/local/share/claude-os/setup/
+    ok "claude-os-setup installed"
+}
+
 setup_skills_dirs() {
     log "Setting up skill directories..."
     sudo mkdir -p /usr/local/share/claude-os/skills/{gstack,antigravity,builtin}
@@ -233,11 +243,12 @@ print_summary() {
     command -v claude-doctor &>/dev/null && echo "  ✓ claude-doctor"
     echo ""
     echo "  Next steps:"
-    echo "  1. Set your API key:  export ANTHROPIC_API_KEY='sk-ant-...'"
-    echo "  2. Verify setup:      claude-doctor"
-    echo "  3. List skills:       skills list"
-    echo "  4. Try Hermes:        hermes 'create a hello world in Python'"
-    echo "  5. Try Blackbox:      blackbox --interactive"
+    echo "  1. Choose your AI tools:  claude-os-setup"
+    echo "  2. Set your API key:      export ANTHROPIC_API_KEY='sk-ant-...'"
+    echo "  3. Verify setup:          claude-doctor"
+    echo "  4. List skills:           skills list"
+    echo "  5. Try Hermes:            hermes 'create a hello world in Python'"
+    echo "  6. Try Blackbox:          blackbox --interactive"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
@@ -255,6 +266,7 @@ install_hermes
 install_blackbox
 install_skills_tool
 install_claude_doctor
+install_setup_wizard
 setup_skills_dirs
 setup_claude_config
 setup_shell_profile

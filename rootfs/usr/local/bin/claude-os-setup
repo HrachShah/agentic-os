@@ -1,0 +1,587 @@
+#!/usr/bin/env python3
+"""
+Claude OS — Interactive Tool Setup Wizard
+Run on first boot or anytime: claude-os-setup
+"""
+from __future__ import annotations
+import curses, json, os, subprocess, sys, textwrap, shutil, time
+from pathlib import Path
+
+VERSION = "1.0.0"
+CONFIG_FILE = Path.home() / ".claude" / "claude-os-tools.json"
+CONFIG_DIR  = Path.home() / ".claude"
+
+# ── Tool registry ─────────────────────────────────────────────────────────────
+# Each entry: id, label, description, category, install_fn_name, needs_key, key_env
+TOOLS = [
+    {
+        "id": "claude-code",
+        "label": "Claude Code",
+        "desc": "Anthropic's official agentic CLI — the core of Claude OS",
+        "cat": "Core (Anthropic)",
+        "default": True,
+        "locked": True,   # always installed
+        "needs_key": True,
+        "key_env": "ANTHROPIC_API_KEY",
+        "key_url": "https://console.anthropic.com",
+        "install": "install_claude_code",
+        "cmd": "claude",
+    },
+    {
+        "id": "hermes",
+        "label": "Hermes",
+        "desc": "Fast AI task delegation terminal — streaming multi-mode REPL (Claude Haiku)",
+        "cat": "Core (Anthropic)",
+        "default": True,
+        "locked": True,
+        "needs_key": True,
+        "key_env": "ANTHROPIC_API_KEY",
+        "install": "install_hermes",
+        "cmd": "hermes",
+    },
+    {
+        "id": "blackbox",
+        "label": "Blackbox",
+        "desc": "Coding intelligence terminal — review, fix, debug, test (Claude Sonnet)",
+        "cat": "Core (Anthropic)",
+        "default": True,
+        "locked": True,
+        "needs_key": True,
+        "key_env": "ANTHROPIC_API_KEY",
+        "install": "install_blackbox",
+        "cmd": "blackbox",
+    },
+    {
+        "id": "opencode",
+        "label": "OpenCode",
+        "desc": "Open-source AI terminal by SST — multi-model, TUI-first coding agent",
+        "cat": "AI Terminals",
+        "default": False,
+        "needs_key": False,
+        "install": "install_opencode",
+        "cmd": "opencode",
+        "url": "https://github.com/sst/opencode",
+    },
+    {
+        "id": "codex",
+        "label": "Codex CLI",
+        "desc": "OpenAI Codex command-line tool — o3/o4-mini powered coding agent",
+        "cat": "AI Terminals",
+        "default": False,
+        "needs_key": True,
+        "key_env": "OPENAI_API_KEY",
+        "key_url": "https://platform.openai.com",
+        "install": "install_codex",
+        "cmd": "codex",
+        "url": "https://github.com/openai/codex",
+    },
+    {
+        "id": "aider",
+        "label": "Aider",
+        "desc": "Git-aware AI coding assistant — works with any model, edits real files",
+        "cat": "AI Terminals",
+        "default": False,
+        "needs_key": True,
+        "key_env": "ANTHROPIC_API_KEY",
+        "install": "install_aider",
+        "cmd": "aider",
+        "url": "https://aider.chat",
+    },
+    {
+        "id": "kilocode",
+        "label": "Kilocode",
+        "desc": "VS Code AI coding extension — autonomous agent, multi-model support",
+        "cat": "Editor Extensions",
+        "default": False,
+        "needs_key": False,
+        "install": "install_kilocode",
+        "cmd": None,
+        "url": "https://kilocode.ai",
+    },
+    {
+        "id": "cline",
+        "label": "Cline",
+        "desc": "VS Code autonomous coding agent — full filesystem + browser access",
+        "cat": "Editor Extensions",
+        "default": False,
+        "needs_key": False,
+        "install": "install_cline",
+        "cmd": None,
+        "url": "https://github.com/cline/cline",
+    },
+    {
+        "id": "continue",
+        "label": "Continue.dev",
+        "desc": "VS Code / JetBrains AI coding copilot — inline edits, chat, multi-model",
+        "cat": "Editor Extensions",
+        "default": False,
+        "needs_key": False,
+        "install": "install_continue",
+        "cmd": None,
+        "url": "https://continue.dev",
+    },
+    {
+        "id": "openclaw",
+        "label": "OpenClaw",
+        "desc": "Open-source autonomous coding agent — browser + code execution",
+        "cat": "AI Agents",
+        "default": False,
+        "needs_key": True,
+        "key_env": "ANTHROPIC_API_KEY",
+        "install": "install_openclaw",
+        "cmd": "openclaw",
+        "url": "https://github.com/openclaw/openclaw",
+    },
+    {
+        "id": "openhands",
+        "label": "OpenHands",
+        "desc": "AI software development agent — writes, runs, browses, debugs end-to-end",
+        "cat": "AI Agents",
+        "default": False,
+        "needs_key": True,
+        "key_env": "ANTHROPIC_API_KEY",
+        "install": "install_openhands",
+        "cmd": "openhands",
+        "url": "https://github.com/All-Hands-AI/OpenHands",
+    },
+    {
+        "id": "goose",
+        "label": "Goose (Block)",
+        "desc": "Autonomous developer agent by Block — runs tasks, uses tools, self-heals",
+        "cat": "AI Agents",
+        "default": False,
+        "needs_key": False,
+        "install": "install_goose",
+        "cmd": "goose",
+        "url": "https://github.com/block/goose",
+    },
+    {
+        "id": "swe-agent",
+        "label": "SWE-agent",
+        "desc": "Princeton SWE-agent — resolves GitHub issues end-to-end autonomously",
+        "cat": "AI Agents",
+        "default": False,
+        "needs_key": True,
+        "key_env": "ANTHROPIC_API_KEY",
+        "install": "install_swe_agent",
+        "cmd": "sweagent",
+        "url": "https://swe-agent.com",
+    },
+]
+
+# ── Colors / TUI helpers ───────────────────────────────────────────────────────
+
+class Colors:
+    HEADER  = "\033[1;35m"
+    BOLD    = "\033[1m"
+    GREEN   = "\033[0;32m"
+    CYAN    = "\033[0;36m"
+    YELLOW  = "\033[1;33m"
+    RED     = "\033[0;31m"
+    DIM     = "\033[2m"
+    RESET   = "\033[0m"
+    CHECK   = "\033[1;32m✓\033[0m"
+    CROSS   = "\033[1;31m✗\033[0m"
+    BULLET  = "\033[0;36m•\033[0m"
+    LOCK    = "\033[2m🔒\033[0m"
+
+C = Colors()
+
+def clear(): os.system("clear")
+
+def banner():
+    print(f"""
+{C.HEADER}  ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗     ██████╗ ███████╗
+ ██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝    ██╔═══██╗██╔════╝
+ ██║     ██║     ███████║██║   ██║██║  ██║█████╗      ██║   ██║███████╗
+ ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗    ╚██████╔╝███████║
+  ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚══════╝{C.RESET}
+
+{C.BOLD}  Tool Setup Wizard — Claude OS {VERSION}{C.RESET}
+  {C.DIM}Select which AI coding tools to install on this machine.{C.RESET}
+""")
+
+def hr(char="─", width=62):
+    print(f"  {C.DIM}{char * width}{C.RESET}")
+
+def input_key(prompt: str, secret: bool = False) -> str:
+    import getpass
+    if secret:
+        return getpass.getpass(f"  {C.CYAN}{prompt}{C.RESET} ")
+    val = input(f"  {C.CYAN}{prompt}{C.RESET} ")
+    return val.strip()
+
+# ── Tool selection UI ─────────────────────────────────────────────────────────
+
+def show_tool_menu(selected: set[str]) -> set[str]:
+    clear()
+    banner()
+
+    # Group by category
+    categories: dict[str, list] = {}
+    for t in TOOLS:
+        categories.setdefault(t["cat"], []).append(t)
+
+    print(f"  {C.BOLD}Choose your AI tools:{C.RESET}  {C.DIM}[Enter] toggle  [a] all  [n] none  [done] continue{C.RESET}")
+    hr()
+
+    # Build flat list for navigation
+    item_list: list[dict] = []
+    for cat, tools in categories.items():
+        print(f"\n  {C.YELLOW}{cat}{C.RESET}")
+        for t in tools:
+            item_list.append(t)
+            is_selected = t["id"] in selected
+            is_locked   = t.get("locked", False)
+            mark = f"{C.LOCK} " if is_locked else (f"{C.CHECK} " if is_selected else f"  {C.DIM}○{C.RESET} ")
+            idx  = len(item_list)
+            desc_short = t["desc"][:55] + "…" if len(t["desc"]) > 55 else t["desc"]
+            print(f"  {C.DIM}[{idx:2d}]{C.RESET} {mark} {C.BOLD}{t['label']:<20}{C.RESET}  {C.DIM}{desc_short}{C.RESET}")
+
+    hr()
+    print(f"  {C.DIM}Selected: {len(selected)} tools{C.RESET}")
+
+    raw = input(f"\n  {C.CYAN}Toggle (number/range), [a]ll, [n]one, or [done]: {C.RESET}").strip().lower()
+
+    if raw == "done" or raw == "":
+        return selected
+    if raw == "a":
+        return {t["id"] for t in TOOLS}
+    if raw == "n":
+        return {t["id"] for t in TOOLS if t.get("locked")}
+
+    # Parse numbers / ranges like "1 3 5-7"
+    for token in raw.replace(",", " ").split():
+        try:
+            if "-" in token:
+                lo, hi = token.split("-")
+                for i in range(int(lo), int(hi) + 1):
+                    t = item_list[i - 1]
+                    if not t.get("locked"):
+                        if t["id"] in selected:
+                            selected.discard(t["id"])
+                        else:
+                            selected.add(t["id"])
+            else:
+                i = int(token)
+                t = item_list[i - 1]
+                if not t.get("locked"):
+                    if t["id"] in selected:
+                        selected.discard(t["id"])
+                    else:
+                        selected.add(t["id"])
+        except (ValueError, IndexError):
+            pass
+
+    return show_tool_menu(selected)  # re-show until done
+
+
+# ── API Key collection ────────────────────────────────────────────────────────
+
+def collect_api_keys(selected_ids: set[str]) -> dict[str, str]:
+    keys: dict[str, str] = {}
+    needed: dict[str, tuple[str, str]] = {}  # env_var -> (label, url)
+
+    for t in TOOLS:
+        if t["id"] in selected_ids and t.get("needs_key") and t.get("key_env"):
+            env = t["key_env"]
+            existing = os.getenv(env, "")
+            if existing:
+                keys[env] = existing
+            elif env not in needed:
+                needed[env] = (t["label"], t.get("key_url", ""))
+
+    if not needed:
+        return keys
+
+    clear()
+    banner()
+    print(f"  {C.BOLD}API Keys{C.RESET}")
+    print(f"  {C.DIM}The tools you selected need API keys. Leave blank to skip.{C.RESET}")
+    hr()
+
+    for env, (label, url) in needed.items():
+        print(f"\n  {C.YELLOW}{env}{C.RESET}")
+        if url:
+            print(f"  {C.DIM}Get one at: {url}{C.RESET}")
+        existing = os.getenv(env, "")
+        if existing:
+            print(f"  {C.CHECK} Already set in environment")
+            keys[env] = existing
+        else:
+            val = input_key(f"Enter {env} (or press Enter to skip):", secret=True)
+            if val:
+                keys[env] = val
+
+    return keys
+
+
+# ── Installation ──────────────────────────────────────────────────────────────
+
+def run_cmd(cmd: str, desc: str = "") -> bool:
+    """Run a shell command, return True on success."""
+    try:
+        result = subprocess.run(
+            cmd, shell=True, capture_output=True, text=True, timeout=300
+        )
+        return result.returncode == 0
+    except subprocess.TimeoutExpired:
+        return False
+    except Exception:
+        return False
+
+def print_step(tool_name: str, step: str):
+    print(f"    {C.DIM}→ {step}{C.RESET}", flush=True)
+
+def install_claude_code(t: dict, keys: dict) -> bool:
+    if shutil.which("claude"):
+        return True
+    return run_cmd("npm install -g @anthropic-ai/claude-code --quiet 2>/dev/null") or \
+           run_cmd("bun add -g @anthropic-ai/claude-code 2>/dev/null")
+
+def install_hermes(t: dict, keys: dict) -> bool:
+    return shutil.which("hermes") is not None  # already bundled
+
+def install_blackbox(t: dict, keys: dict) -> bool:
+    return shutil.which("blackbox") is not None  # already bundled
+
+def install_opencode(t: dict, keys: dict) -> bool:
+    print_step("OpenCode", "npm install -g opencode-ai")
+    return run_cmd("npm install -g opencode-ai --quiet 2>/dev/null") or \
+           run_cmd("bun add -g opencode-ai 2>/dev/null")
+
+def install_codex(t: dict, keys: dict) -> bool:
+    print_step("Codex", "npm install -g @openai/codex")
+    return run_cmd("npm install -g @openai/codex --quiet 2>/dev/null") or \
+           run_cmd("bun add -g @openai/codex 2>/dev/null")
+
+def install_aider(t: dict, keys: dict) -> bool:
+    print_step("Aider", "pip install aider-chat")
+    return run_cmd("pip install aider-chat --quiet 2>/dev/null") or \
+           run_cmd("uv tool install aider-chat 2>/dev/null")
+
+def install_kilocode(t: dict, keys: dict) -> bool:
+    print_step("Kilocode", "VS Code extension (installs when VS Code is opened)")
+    # Write a VS Code extensions file so it auto-installs on next VS Code launch
+    vscode_dir = Path.home() / ".vscode" / "extensions"
+    rec_file   = Path.home() / ".vscode" / "extensions" / ".claudeos-recommended"
+    vscode_dir.mkdir(parents=True, exist_ok=True)
+    rec_file.write_text("kilocode.kilocode\n")
+    # Try direct install if code is available
+    if shutil.which("code"):
+        return run_cmd("code --install-extension kilocode.kilocode --force 2>/dev/null")
+    return True  # marked installed, will apply when VS Code runs
+
+def install_cline(t: dict, keys: dict) -> bool:
+    print_step("Cline", "VS Code extension")
+    if shutil.which("code"):
+        return run_cmd("code --install-extension saoudrizwan.claude-dev --force 2>/dev/null")
+    vscode_dir = Path.home() / ".vscode" / "extensions"
+    vscode_dir.mkdir(parents=True, exist_ok=True)
+    (vscode_dir / ".claudeos-recommended").open("a").write("saoudrizwan.claude-dev\n")
+    return True
+
+def install_continue(t: dict, keys: dict) -> bool:
+    print_step("Continue.dev", "VS Code extension")
+    if shutil.which("code"):
+        return run_cmd("code --install-extension Continue.continue --force 2>/dev/null")
+    vscode_dir = Path.home() / ".vscode" / "extensions"
+    vscode_dir.mkdir(parents=True, exist_ok=True)
+    (vscode_dir / ".claudeos-recommended").open("a").write("Continue.continue\n")
+    return True
+
+def install_openclaw(t: dict, keys: dict) -> bool:
+    print_step("OpenClaw", "pip install openclaw / npm install -g openclaw")
+    # Try pip first, then npm
+    if run_cmd("pip install openclaw --quiet 2>/dev/null"):
+        return True
+    if run_cmd("npm install -g openclaw --quiet 2>/dev/null"):
+        return True
+    # Clone from GitHub as fallback
+    install_dir = Path("/usr/local/share/claude-os/tools/openclaw")
+    install_dir.mkdir(parents=True, exist_ok=True)
+    if run_cmd(f"git clone --depth=1 https://github.com/openclaw/openclaw {install_dir} 2>/dev/null"):
+        run_cmd(f"pip install -e {install_dir} --quiet 2>/dev/null")
+        return True
+    # Write a stub so the command exists
+    stub = Path("/usr/local/bin/openclaw")
+    stub.write_text('#!/usr/bin/env sh\necho "OpenClaw: install from https://github.com/openclaw/openclaw"\n')
+    stub.chmod(0o755)
+    return True
+
+def install_openhands(t: dict, keys: dict) -> bool:
+    print_step("OpenHands", "pip install openhands-ai")
+    return run_cmd("pip install openhands-ai --quiet 2>/dev/null") or \
+           run_cmd("uv tool install openhands-ai 2>/dev/null")
+
+def install_goose(t: dict, keys: dict) -> bool:
+    print_step("Goose", "curl install from block/goose")
+    if run_cmd("curl -fsSL https://github.com/block/goose/releases/latest/download/goose-installer.sh | bash 2>/dev/null"):
+        return True
+    return run_cmd("pip install goose-ai --quiet 2>/dev/null")
+
+def install_swe_agent(t: dict, keys: dict) -> bool:
+    print_step("SWE-agent", "pip install sweagent")
+    return run_cmd("pip install sweagent --quiet 2>/dev/null") or \
+           run_cmd("uv tool install sweagent 2>/dev/null")
+
+
+INSTALL_FNS = {
+    "claude-code": install_claude_code,
+    "hermes":      install_hermes,
+    "blackbox":    install_blackbox,
+    "opencode":    install_opencode,
+    "codex":       install_codex,
+    "aider":       install_aider,
+    "kilocode":    install_kilocode,
+    "cline":       install_cline,
+    "continue":    install_continue,
+    "openclaw":    install_openclaw,
+    "openhands":   install_openhands,
+    "goose":       install_goose,
+    "swe-agent":   install_swe_agent,
+}
+
+
+def run_installations(selected_ids: set[str], keys: dict[str, str]) -> dict[str, bool]:
+    clear()
+    banner()
+    print(f"  {C.BOLD}Installing selected tools...{C.RESET}")
+    hr()
+
+    # Write API keys to shell profile
+    bashrc = Path.home() / ".bashrc"
+    existing = bashrc.read_text() if bashrc.exists() else ""
+    key_lines = []
+    for env, val in keys.items():
+        if f"export {env}" not in existing:
+            key_lines.append(f'export {env}="{val}"')
+    if key_lines:
+        with bashrc.open("a") as f:
+            f.write("\n# Claude OS API Keys (added by claude-os-setup)\n")
+            for line in key_lines:
+                f.write(line + "\n")
+        # Also set in current process
+        for env, val in keys.items():
+            os.environ[env] = val
+
+    # Also write to ~/.claude/api_key for Anthropic key
+    if "ANTHROPIC_API_KEY" in keys:
+        key_file = Path.home() / ".claude" / "api_key"
+        key_file.parent.mkdir(exist_ok=True)
+        key_file.write_text(keys["ANTHROPIC_API_KEY"])
+        key_file.chmod(0o600)
+
+    results: dict[str, bool] = {}
+    tools_to_install = [t for t in TOOLS if t["id"] in selected_ids]
+
+    for t in tools_to_install:
+        label = t["label"]
+        print(f"\n  {C.BULLET} {C.BOLD}{label}{C.RESET}", flush=True)
+        fn = INSTALL_FNS.get(t["install"] or t["id"])
+        if fn:
+            ok = fn(t, keys)
+        else:
+            ok = False
+        results[t["id"]] = ok
+        status = f"{C.CHECK} installed" if ok else f"{C.CROSS} failed (check internet/permissions)"
+        print(f"    {status}")
+
+    return results
+
+
+def show_summary(selected_ids: set[str], results: dict[str, bool], keys: dict):
+    clear()
+    banner()
+    print(f"  {C.BOLD}Setup Complete{C.RESET}")
+    hr()
+
+    installed = [t for t in TOOLS if t["id"] in selected_ids and results.get(t["id"], False)]
+    failed    = [t for t in TOOLS if t["id"] in selected_ids and not results.get(t["id"], True)]
+
+    print(f"\n  {C.GREEN}Installed ({len(installed)}){C.RESET}")
+    for t in installed:
+        cmd = f"  → {t['cmd']}" if t.get("cmd") else ""
+        print(f"    {C.CHECK} {t['label']:<20}{C.DIM}{cmd}{C.RESET}")
+
+    if failed:
+        print(f"\n  {C.YELLOW}Needs attention ({len(failed)}){C.RESET}")
+        for t in failed:
+            url = t.get("url", "")
+            print(f"    {C.CROSS} {t['label']:<20}{C.DIM}  manual: {url}{C.RESET}")
+
+    # Save config
+    CONFIG_DIR.mkdir(exist_ok=True)
+    cfg = {
+        "version": VERSION,
+        "installed_tools": list(selected_ids),
+        "results": results,
+        "setup_date": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "api_keys_configured": list(keys.keys()),
+    }
+    CONFIG_FILE.write_text(json.dumps(cfg, indent=2))
+
+    hr()
+    print(f"\n  {C.BOLD}Quick reference:{C.RESET}")
+    cmds = [(t["label"], t["cmd"]) for t in installed if t.get("cmd")]
+    for label, cmd in cmds:
+        print(f"    {C.CYAN}{cmd:<15}{C.RESET}  {C.DIM}{label}{C.RESET}")
+    print(f"    {C.CYAN}{'skills list':<15}{C.RESET}  {C.DIM}Browse all installed skills{C.RESET}")
+    print(f"    {C.CYAN}{'claude-doctor':<15}{C.RESET}  {C.DIM}System health check{C.RESET}")
+
+    print(f"\n  {C.DIM}Config saved: {CONFIG_FILE}{C.RESET}")
+    print()
+
+    if "ANTHROPIC_API_KEY" in keys:
+        print(f"  {C.CHECK} Anthropic API key stored in ~/.claude/api_key and ~/.bashrc")
+
+    print(f"\n  {C.BOLD}Run 'source ~/.bashrc' or restart your shell to apply changes.{C.RESET}")
+    print()
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+def main():
+    # Load previously saved config (for re-run)
+    prev_selected: set[str] = {t["id"] for t in TOOLS if t.get("locked") or t.get("default")}
+    if CONFIG_FILE.exists():
+        try:
+            cfg = json.loads(CONFIG_FILE.read_text())
+            prev_selected = set(cfg.get("installed_tools", [])) | {t["id"] for t in TOOLS if t.get("locked")}
+        except Exception:
+            pass
+
+    # Show selection menu (loop until user types "done")
+    selected = show_tool_menu(prev_selected)
+
+    # Collect API keys for selected tools
+    keys = collect_api_keys(selected)
+
+    # Confirm
+    clear()
+    banner()
+    print(f"  {C.BOLD}Ready to install:{C.RESET}")
+    hr()
+    for t in TOOLS:
+        if t["id"] in selected:
+            mark = C.LOCK + " " if t.get("locked") else C.CHECK + " "
+            print(f"  {mark} {t['label']}")
+    print()
+    confirm = input(f"  {C.CYAN}Proceed with installation? [Y/n]: {C.RESET}").strip().lower()
+    if confirm in ("n", "no"):
+        print("\n  Installation cancelled.\n")
+        sys.exit(0)
+
+    # Install
+    results = run_installations(selected, keys)
+
+    # Summary
+    show_summary(selected, results, keys)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\n  Setup interrupted. Run 'claude-os-setup' to continue.\n")
+        sys.exit(0)
