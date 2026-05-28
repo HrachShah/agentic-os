@@ -1,0 +1,83 @@
+version: '3.9'
+
+services:
+  # ── Claude OS main shell ──────────────────────────────────────────────────
+  claude-os:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: claude-os:1.0.0
+    container_name: claude-os
+    hostname: claudeos
+    tty: true
+    stdin_open: true
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_OS=1
+    volumes:
+      - claude-workspace:/workspace
+      - claude-home:/root
+      # Mount your local projects into the OS
+      - ${HOME}/projects:/workspace/projects:cached
+      # Persist Claude Code config
+      - claude-config:/root/.claude
+    networks:
+      - claude-net
+    restart: unless-stopped
+
+  # ── Hermes agent service (always-on AI worker) ───────────────────────────
+  hermes-daemon:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: claude-os:1.0.0
+    container_name: hermes-daemon
+    hostname: hermes
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - HERMES_MODEL=claude-haiku-4-5-20251001
+      - HERMES_DAEMON=1
+    volumes:
+      - claude-workspace:/workspace
+      - hermes-queue:/var/spool/hermes
+    networks:
+      - claude-net
+    command: >
+      python3 /usr/local/share/claude-os/tools/hermes/hermes.py
+      --interactive
+    profiles:
+      - daemon
+
+  # ── Blackbox coding server ─────────────────────────────────────────────────
+  blackbox-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: claude-os:1.0.0
+    container_name: blackbox-server
+    hostname: blackbox
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - BLACKBOX_MODEL=claude-sonnet-4-6
+    volumes:
+      - claude-workspace:/workspace
+    networks:
+      - claude-net
+    command: python3 /usr/local/share/claude-os/tools/blackbox/blackbox.py --interactive
+    profiles:
+      - daemon
+
+volumes:
+  claude-workspace:
+    name: claude-os-workspace
+  claude-home:
+    name: claude-os-home
+  claude-config:
+    name: claude-os-config
+  hermes-queue:
+    name: claude-os-hermes-queue
+
+networks:
+  claude-net:
+    name: claude-os-network
+    driver: bridge

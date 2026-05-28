@@ -1,0 +1,16 @@
+[Unit]
+Description=Claude OS First Boot Setup
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/claude-os/.first-boot-complete
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/share/claude-os/init/claude-os-init.sh
+RemainAfterExit=yes
+StandardOutput=journal+console
+StandardError=journal+console
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target

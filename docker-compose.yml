@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  claude-os:
+    build: .
+    container_name: claude-os
+    ports:
+      - "3000:3000"
+    volumes:
+      - ${CLAUDE_HOME:-~/.claude}:/root/.claude:ro
+      - ${WORKSPACE:-~/}:/workspace
+      - ./config:/app/config
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CLAUDE_HOME=/root/.claude
+      - WORKSPACE=/workspace
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  # Dev mode (hot reload)
+  claude-os-dev:
+    build: .
+    container_name: claude-os-dev
+    profiles: ["dev"]
+    ports:
+      - "3000:3000"
+      - "5173:5173"
+    volumes:
+      - ${CLAUDE_HOME:-~/.claude}:/root/.claude:ro
+      - ${WORKSPACE:-~/}:/workspace
+      - ./backend:/app/backend
+      - ./dashboard/src:/app/dashboard/src
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - NODE_ENV=development
+    command: sh -c "node backend/server.js & cd dashboard && npm run dev -- --host"

@@ -1,0 +1,303 @@
+#!/usr/bin/env bash
+# Claude OS Skills Manager
+# Manages Claude Code skills, antigravity skills, and gstack skills
+
+SKILLS_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
+ANTIGRAVITY_SKILLS="${ANTIGRAVITY_SKILLS:-/usr/local/share/claude-os/skills/antigravity}"
+GSTACK_SKILLS="${GSTACK_SKILLS:-/usr/local/share/claude-os/skills/gstack}"
+BUILTIN_SKILLS="/usr/local/share/claude-os/skills/builtin"
+VERSION="1.0.0"
+
+# ── Colors ────────────────────────────────────────────────────────────────────
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
+BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
+
+usage() {
+    cat <<EOF
+${BOLD}skills${RESET} — Claude OS skill manager v${VERSION}
+
+${BOLD}USAGE${RESET}
+    skills <command> [args]
+
+${BOLD}COMMANDS${RESET}
+    list [filter]       List all installed skills (optionally filter by name)
+    search <query>      Search skill descriptions
+    info <skill>        Show skill details
+    run <skill>         Execute a skill (launches Claude with skill context)
+    install <path>      Install a skill from directory or URL
+    remove <skill>      Remove a skill
+    update              Update all skills
+    sources             List skill source directories
+    export <skill>      Export a skill to stdout
+    import <file>       Import a skill from YAML/JSON
+
+${BOLD}EXAMPLES${RESET}
+    skills list
+    skills list gstack
+    skills search "code review"
+    skills info review
+    skills run autoplan
+    skills install ~/my-skill/
+
+${BOLD}SKILL SOURCES${RESET}
+    claude:     ${SKILLS_DIR}
+    gstack:     ${GSTACK_SKILLS}
+    antigravity:${ANTIGRAVITY_SKILLS}
+    builtin:    ${BUILTIN_SKILLS}
+
+EOF
+}
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+list_skills_in_dir() {
+    local dir="$1" source="$2"
+    if [[ ! -d "$dir" ]]; then return; fi
+    while IFS= read -r -d '' skill_dir; do
+        local name
+        name=$(basename "$skill_dir")
+        printf "  ${CYAN}%-30s${RESET} ${YELLOW}[%s]${RESET}\n" "$name" "$source"
+    done < <(find "$dir" -maxdepth 1 -mindepth 1 -type d -print0 | sort -z)
+}
+
+cmd_list() {
+    local filter="${1:-}"
+    echo ""
+    echo "${BOLD}Installed Skills${RESET}"
+    echo "────────────────────────────────────────"
+
+    local total=0
+
+    for entry in \
+        "${SKILLS_DIR}:claude" \
+        "${GSTACK_SKILLS}:gstack" \
+        "${ANTIGRAVITY_SKILLS}:antigravity" \
+        "${BUILTIN_SKILLS}:builtin"; do
+        local dir="${entry%%:*}"
+        local source="${entry##*:}"
+        if [[ -d "$dir" ]]; then
+            if [[ -z "$filter" ]]; then
+                echo ""
+                echo "${BOLD}${source}${RESET} (${dir})"
+                list_skills_in_dir "$dir" "$source"
+                local count
+                count=$(find "$dir" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+                total=$((total + count))
+            else
+                while IFS= read -r -d '' skill_dir; do
+                    local name
+                    name=$(basename "$skill_dir")
+                    if [[ "$name" == *"$filter"* ]]; then
+                        printf "  ${CYAN}%-30s${RESET} ${YELLOW}[%s]${RESET}\n" "$name" "$source"
+                        total=$((total + 1))
+                    fi
+                done < <(find "$dir" -maxdepth 1 -mindepth 1 -type d -print0 2>/dev/null | sort -z)
+            fi
+        fi
+    done
+
+    echo ""
+    echo "────────────────────────────────────────"
+    echo "${BOLD}Total: ${total} skills${RESET}"
+    echo ""
+}
+
+cmd_search() {
+    local query="${1:-}"
+    if [[ -z "$query" ]]; then
+        echo "Usage: skills search <query>"
+        exit 1
+    fi
+    echo ""
+    echo "${BOLD}Search: \"${query}\"${RESET}"
+    echo "────────────────────────────────────────"
+
+    local found=0
+    for dir in "$SKILLS_DIR" "$GSTACK_SKILLS" "$ANTIGRAVITY_SKILLS" "$BUILTIN_SKILLS"; do
+        [[ -d "$dir" ]] || continue
+        while IFS= read -r -d '' skill_dir; do
+            local name description=""
+            name=$(basename "$skill_dir")
+            # Try to read description from skill metadata
+            for meta in "skill.md" "README.md" "description.txt" ".description"; do
+                if [[ -f "$skill_dir/$meta" ]]; then
+                    description=$(head -3 "$skill_dir/$meta" 2>/dev/null | tr '\n' ' ')
+                    break
+                fi
+            done
+            if echo "$name $description" | grep -qi "$query"; then
+                printf "  ${CYAN}%-30s${RESET} %s\n" "$name" "${description:0:60}"
+                found=$((found + 1))
+            fi
+        done < <(find "$dir" -maxdepth 1 -mindepth 1 -type d -print0 2>/dev/null | sort -z)
+    done
+
+    echo ""
+    echo "${found} results found."
+    echo ""
+}
+
+cmd_info() {
+    local skill_name="${1:-}"
+    if [[ -z "$skill_name" ]]; then
+        echo "Usage: skills info <skill>"
+        exit 1
+    fi
+
+    local skill_dir=""
+    for dir in "$SKILLS_DIR" "$GSTACK_SKILLS" "$ANTIGRAVITY_SKILLS" "$BUILTIN_SKILLS"; do
+        if [[ -d "$dir/$skill_name" ]]; then
+            skill_dir="$dir/$skill_name"
+            break
+        fi
+    done
+
+    if [[ -z "$skill_dir" ]]; then
+        echo -e "${RED}Skill '${skill_name}' not found.${RESET}"
+        exit 1
+    fi
+
+    echo ""
+    echo "${BOLD}Skill: ${skill_name}${RESET}"
+    echo "Path: ${skill_dir}"
+    echo "────────────────────────────────────────"
+    echo ""
+
+    for meta in "skill.md" "README.md"; do
+        if [[ -f "$skill_dir/$meta" ]]; then
+            cat "$skill_dir/$meta"
+            break
+        fi
+    done
+
+    echo ""
+    echo "Files:"
+    ls -la "$skill_dir/" 2>/dev/null
+    echo ""
+}
+
+cmd_run() {
+    local skill_name="${1:-}"
+    if [[ -z "$skill_name" ]]; then
+        echo "Usage: skills run <skill>"
+        exit 1
+    fi
+
+    local skill_dir=""
+    for dir in "$SKILLS_DIR" "$GSTACK_SKILLS" "$ANTIGRAVITY_SKILLS" "$BUILTIN_SKILLS"; do
+        if [[ -d "$dir/$skill_name" ]]; then
+            skill_dir="$dir/$skill_name"
+            break
+        fi
+    done
+
+    if [[ -z "$skill_dir" ]]; then
+        echo -e "${RED}Skill '${skill_name}' not found.${RESET}"
+        exit 1
+    fi
+
+    echo -e "${GREEN}→ Running skill: ${skill_name}${RESET}"
+    echo ""
+
+    # Check for executable run.sh
+    if [[ -x "$skill_dir/run.sh" ]]; then
+        exec "$skill_dir/run.sh" "${@:2}"
+    fi
+
+    # Check for skill.md to use as Claude prompt
+    if [[ -f "$skill_dir/skill.md" ]]; then
+        local skill_content
+        skill_content=$(cat "$skill_dir/skill.md")
+        echo "${skill_content}" | claude --print-system-prompt 2>/dev/null || \
+            echo "claude /${skill_name}"
+        return
+    fi
+
+    echo -e "${YELLOW}Skill '${skill_name}' has no runnable entry point.${RESET}"
+    echo "Use: claude /${skill_name}"
+}
+
+cmd_install() {
+    local source="${1:-}"
+    if [[ -z "$source" ]]; then
+        echo "Usage: skills install <path-or-url>"
+        exit 1
+    fi
+
+    mkdir -p "$SKILLS_DIR"
+
+    if [[ -d "$source" ]]; then
+        local name
+        name=$(basename "$source")
+        cp -r "$source" "$SKILLS_DIR/$name"
+        echo -e "${GREEN}✓ Installed skill: ${name}${RESET}"
+    elif [[ "$source" =~ ^https?:// ]]; then
+        local name
+        name=$(basename "$source" .git)
+        git clone "$source" "$SKILLS_DIR/$name"
+        echo -e "${GREEN}✓ Installed skill from git: ${name}${RESET}"
+    else
+        echo -e "${RED}Cannot install from: ${source}${RESET}"
+        exit 1
+    fi
+}
+
+cmd_remove() {
+    local skill_name="${1:-}"
+    if [[ -z "$skill_name" ]]; then
+        echo "Usage: skills remove <skill>"
+        exit 1
+    fi
+
+    if [[ -d "$SKILLS_DIR/$skill_name" ]]; then
+        rm -rf "$SKILLS_DIR/$skill_name"
+        echo -e "${GREEN}✓ Removed skill: ${skill_name}${RESET}"
+    else
+        echo -e "${RED}Skill '${skill_name}' not found in user skills.${RESET}"
+        exit 1
+    fi
+}
+
+cmd_sources() {
+    echo ""
+    echo "${BOLD}Skill Sources${RESET}"
+    echo "────────────────────────────────────────"
+    for entry in \
+        "claude:${SKILLS_DIR}" \
+        "gstack:${GSTACK_SKILLS}" \
+        "antigravity:${ANTIGRAVITY_SKILLS}" \
+        "builtin:${BUILTIN_SKILLS}"; do
+        local source="${entry%%:*}"
+        local dir="${entry##*:}"
+        local count=0
+        [[ -d "$dir" ]] && count=$(find "$dir" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
+        local status="${GREEN}✓${RESET}"
+        [[ ! -d "$dir" ]] && status="${RED}✗${RESET}"
+        printf "  %b %-15s %s (%d skills)\n" "$status" "$source" "$dir" "$count"
+    done
+    echo ""
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+case "${1:-}" in
+    list|ls)        cmd_list "${2:-}" ;;
+    search|find)    cmd_search "${2:-}" ;;
+    info|show)      cmd_info "${2:-}" ;;
+    run|exec)       cmd_run "${@:2}" ;;
+    install|add)    cmd_install "${2:-}" ;;
+    remove|rm|del)  cmd_remove "${2:-}" ;;
+    sources)        cmd_sources ;;
+    update)
+        echo "Updating skills..."
+        for dir in "$SKILLS_DIR" "$GSTACK_SKILLS" "$ANTIGRAVITY_SKILLS"; do
+            [[ -d "$dir/.git" ]] && git -C "$dir" pull --rebase --autostash 2>/dev/null && \
+                echo -e "${GREEN}✓ Updated: $dir${RESET}"
+        done ;;
+    help|--help|-h) usage ;;
+    "")             usage; cmd_list ;;
+    *)
+        echo -e "${RED}Unknown command: $1${RESET}"
+        usage
+        exit 1
+        ;;
+esac

@@ -1,0 +1,61 @@
+{
+  "model": "claude-sonnet-4-6",
+  "theme": "dark",
+  "autoUpdate": true,
+  "telemetry": true,
+  "preferredNotifChannel": "terminal",
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(uv:*)",
+      "Bash(python:*)",
+      "Bash(bun:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(ruff:*)",
+      "Bash(pytest:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(touch:*)",
+      "Bash(chmod:*)",
+      "Bash(skills:*)",
+      "Bash(hermes:*)",
+      "Bash(blackbox:*)",
+      "Bash(claude-doctor:*)",
+      "Bash(rtk:*)"
+    ],
+    "deny": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rtk post-command 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  },
+  "env": {
+    "CLAUDE_OS": "1",
+    "CLAUDE_OS_VERSION": "1.0.0"
+  },
+  "includeCoAuthoredBy": true,
+  "enabledMcpjsonServers": [],
+  "disableNonEssentialTraffic": false,
+  "statusBar": {
+    "enabled": true,
+    "showModel": true,
+    "showTokens": true
+  }
+}

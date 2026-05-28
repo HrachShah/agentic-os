@@ -1,0 +1,31 @@
+
+  ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗
+ ██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝
+ ██║     ██║     ███████║██║   ██║██║  ██║█████╗
+ ██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝
+ ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗
+  ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
+                                           ██████╗ ███████╗
+                                          ██╔═══██╗██╔════╝
+                                          ██║   ██║███████╗
+                                          ██║   ██║╚════██║
+                                          ╚██████╔╝███████║
+                                           ╚═════╝ ╚══════╝
+
+  ─────────────────────────────────────────────────────────
+  Claude OS 1.0.0 "Sonnet"  |  Powered by Anthropic
+  Linux $(uname -r)  |  $(date +"%A, %B %d %Y")
+  ─────────────────────────────────────────────────────────
+
+  Quick Start:
+    claude              ── Start Claude Code CLI
+    hermes "task"       ── Delegate task to Hermes AI agent
+    blackbox "code"     ── Run Blackbox coding assistant
+    skills list         ── Browse installed skills
+    skills run <name>   ── Execute a skill
+    claude-doctor       ── System health check
+
+  Installed skills: $(ls /home/claude/.claude/skills/ 2>/dev/null | wc -l) skills ready
+  API key:          $([ -n "$ANTHROPIC_API_KEY" ] && echo "✓ configured" || echo "✗ set ANTHROPIC_API_KEY")
+  ─────────────────────────────────────────────────────────
+

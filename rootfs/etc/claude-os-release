@@ -1,0 +1,14 @@
+NAME="Claude OS"
+VERSION="1.0.0"
+ID=claudeos
+ID_LIKE=debian
+PRETTY_NAME="Claude OS 1.0.0 (Sonnet)"
+VERSION_ID="1.0"
+HOME_URL="https://github.com/anthropics/claude-code"
+SUPPORT_URL="https://github.com/anthropics/claude-code/issues"
+BUG_REPORT_URL="https://github.com/anthropics/claude-code/issues"
+ANSI_COLOR="0;34"
+LOGO=claude-os
+BUILD_DATE="2026-05-28"
+KERNEL_TARGET="6.6.30-claudeos"
+CODENAME="Sonnet"

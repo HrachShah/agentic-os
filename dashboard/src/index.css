@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #080a0f;
+    color: #e2e8f0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  code, pre, .mono {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply bg-os-panel border border-os-border rounded-lg;
+  }
+
+  .panel-header {
+    @apply flex items-center justify-between px-3 py-2 border-b border-os-border;
+  }
+
+  .btn {
+    @apply px-3 py-1.5 rounded text-sm font-medium transition-all duration-150;
+  }
+
+  .btn-primary {
+    @apply btn bg-os-accent text-white hover:bg-os-accent-glow shadow-accent;
+  }
+
+  .btn-ghost {
+    @apply btn text-os-text-dim hover:text-os-text hover:bg-os-hover;
+  }
+
+  .skill-chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
+           bg-os-active border border-os-border text-os-text-dim cursor-pointer
+           hover:border-os-accent hover:text-os-text transition-all duration-150;
+  }
+
+  .activity-item {
+    @apply flex items-start gap-3 p-3 rounded-lg hover:bg-os-hover transition-colors
+           border border-transparent hover:border-os-border;
+  }
+
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #1c2030 transparent;
+  }
+}
+
+/* Glow effects */
+.glow-purple { text-shadow: 0 0 8px rgba(124, 58, 237, 0.6); }
+.glow-green { text-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+.border-glow { box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.4); }
+
+/* XTerm overrides */
+.xterm-viewport { border-radius: 0 0 8px 8px; }
+.xterm { padding: 8px; }

@@ -1,0 +1,7 @@
+[2026-05-27T18:56:05.063Z] GET http://localhost:3000/ → pending (?ms, ?B)
+[2026-05-27T18:56:05.185Z] GET https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap → 200 (250ms, 19813B)
+[2026-05-27T18:56:05.186Z] GET https://cdn.jsdelivr.net/npm/@xterm/xterm@6.0.0/css/xterm.css → 200 (221ms, 7112B)
+[2026-05-27T18:56:05.186Z] GET http://localhost:3000/assets/index-CLS7f9TQ.js → 200 (231ms, 312692B)
+[2026-05-27T18:56:05.187Z] GET http://localhost:3000/assets/index-B1IWQ5N0.css → 200 (207ms, 21727B)
+[2026-05-27T18:56:05.670Z] GET https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2 → 200 (186ms, 48256B)
+[2026-05-27T18:56:05.670Z] GET https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2 → 200 (189ms, 31432B)
