@@ -94,7 +94,7 @@ export default function Spotlight() {
                     </div>
                     <div>
                       <div className="text-white/90 text-[14px] font-medium">{app.label}</div>
-                      <div className="text-white/35 text-[12px]">Claude OS App</div>
+                      <div className="text-white/35 text-[12px]">Agentic OS App</div>
                     </div>
                     <kbd className="ml-auto text-[10px] text-white/20 border border-white/10 rounded px-1.5 py-0.5 opacity-0 group-hover:opacity-100">
                       ↵

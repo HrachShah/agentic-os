@@ -9,7 +9,7 @@ const SKILLS = [
   { id: 'debug-fast',    name: 'Debug Fast',     icon: '🐛', cat: 'Code',    desc: 'Rapid root-cause analysis with Hermes' },
   { id: 'scaffold',      name: 'Scaffold',       icon: '🏗️', cat: 'Code',    desc: 'Generate project boilerplate from a description' },
   { id: 'deploy-check',  name: 'Deploy Check',   icon: '🚀', cat: 'DevOps',  desc: 'Pre-deployment safety checklist' },
-  { id: 'claude-os-help',name: 'Claude OS Help', icon: '❓', cat: 'System',  desc: 'Get help with Claude OS commands and features' },
+  { id: 'agentic-os-help',name: 'Agentic OS Help', icon: '❓', cat: 'System',  desc: 'Get help with Agentic OS commands and features' },
   { id: 'autoplan',      name: 'Autoplan',       icon: '📋', cat: 'Planning', desc: 'gstack autonomous planning before implementation' },
   { id: 'review',        name: 'Code Review',    icon: '🔍', cat: 'Code',    desc: 'gstack production-grade code review' },
   { id: 'investigate',   name: 'Investigate',    icon: '🕵️', cat: 'Debug',   desc: 'gstack root cause debugging' },

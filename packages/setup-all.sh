@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Claude OS — Complete Package Installer
-# Run this on any Debian/Ubuntu system to install the full Claude OS toolchain
+# Agentic OS — Complete Package Installer
+# Run this on any Debian/Ubuntu system to install the full Agentic OS toolchain
 # Works on: native Linux, WSL2, live OS, Docker container
 
 set -euo pipefail
@@ -22,8 +22,8 @@ banner() {
 cat <<'EOF'
 
   ╔══════════════════════════════════════════════════╗
-  ║   Claude OS — Package Installer                  ║
-  ║   Installing all Claude OS tools and skills      ║
+  ║   Agentic OS — Package Installer                  ║
+  ║   Installing all Agentic OS tools and skills      ║
   ╚══════════════════════════════════════════════════╝
 
 EOF
@@ -112,11 +112,11 @@ install_python_deps() {
 
 install_hermes() {
     log "Installing Hermes AI terminal..."
-    sudo mkdir -p /usr/local/share/claude-os/tools/hermes
-    sudo cp "${ROOT_DIR}/tools/hermes/hermes.py" /usr/local/share/claude-os/tools/hermes/
+    sudo mkdir -p /usr/local/share/agentic-os/tools/hermes
+    sudo cp "${ROOT_DIR}/tools/hermes/hermes.py" /usr/local/share/agentic-os/tools/hermes/
     sudo tee /usr/local/bin/hermes > /dev/null <<'WRAP'
 #!/usr/bin/env bash
-exec python3 /usr/local/share/claude-os/tools/hermes/hermes.py "$@"
+exec python3 /usr/local/share/agentic-os/tools/hermes/hermes.py "$@"
 WRAP
     sudo chmod +x /usr/local/bin/hermes
     ok "Hermes: $(hermes --version 2>/dev/null || echo 'installed')"
@@ -124,11 +124,11 @@ WRAP
 
 install_blackbox() {
     log "Installing Blackbox coding terminal..."
-    sudo mkdir -p /usr/local/share/claude-os/tools/blackbox
-    sudo cp "${ROOT_DIR}/tools/blackbox/blackbox.py" /usr/local/share/claude-os/tools/blackbox/
+    sudo mkdir -p /usr/local/share/agentic-os/tools/blackbox
+    sudo cp "${ROOT_DIR}/tools/blackbox/blackbox.py" /usr/local/share/agentic-os/tools/blackbox/
     sudo tee /usr/local/bin/blackbox > /dev/null <<'WRAP'
 #!/usr/bin/env bash
-exec python3 /usr/local/share/claude-os/tools/blackbox/blackbox.py "$@"
+exec python3 /usr/local/share/agentic-os/tools/blackbox/blackbox.py "$@"
 WRAP
     sudo chmod +x /usr/local/bin/blackbox
     ok "Blackbox installed"
@@ -149,29 +149,29 @@ install_claude_doctor() {
 }
 
 install_setup_wizard() {
-    log "Installing claude-os-setup (tool selection wizard)..."
-    sudo cp "${ROOT_DIR}/rootfs/usr/local/bin/claude-os-setup" /usr/local/bin/claude-os-setup
-    sudo chmod +x /usr/local/bin/claude-os-setup
-    sudo mkdir -p /usr/local/share/claude-os/setup
-    sudo cp "${ROOT_DIR}/rootfs/usr/local/share/claude-os/setup/tool-installers.sh" \
-        /usr/local/share/claude-os/setup/
-    ok "claude-os-setup installed"
+    log "Installing agentic-os-setup (tool selection wizard)..."
+    sudo cp "${ROOT_DIR}/rootfs/usr/local/bin/agentic-os-setup" /usr/local/bin/agentic-os-setup
+    sudo chmod +x /usr/local/bin/agentic-os-setup
+    sudo mkdir -p /usr/local/share/agentic-os/setup
+    sudo cp "${ROOT_DIR}/rootfs/usr/local/share/agentic-os/setup/tool-installers.sh" \
+        /usr/local/share/agentic-os/setup/
+    ok "agentic-os-setup installed"
 }
 
 setup_skills_dirs() {
     log "Setting up skill directories..."
-    sudo mkdir -p /usr/local/share/claude-os/skills/{gstack,antigravity,builtin}
+    sudo mkdir -p /usr/local/share/agentic-os/skills/{gstack,antigravity,builtin}
     mkdir -p "${HOME_DIR}/.claude/skills"
 
     # Copy bundled gstack skills
     if [[ -d "${ROOT_DIR}/skills/gstack" ]]; then
-        sudo cp -r "${ROOT_DIR}/skills/gstack/." /usr/local/share/claude-os/skills/gstack/
+        sudo cp -r "${ROOT_DIR}/skills/gstack/." /usr/local/share/agentic-os/skills/gstack/
         ok "gstack skills installed"
     fi
 
     # Copy builtin skills
     if [[ -d "${ROOT_DIR}/skills/builtin" ]]; then
-        sudo cp -r "${ROOT_DIR}/skills/builtin/." /usr/local/share/claude-os/skills/builtin/
+        sudo cp -r "${ROOT_DIR}/skills/builtin/." /usr/local/share/agentic-os/skills/builtin/
         ok "builtin skills installed"
     fi
 
@@ -211,7 +211,7 @@ setup_shell_profile() {
     if ! grep -q "claude-env.sh" "$BASHRC" 2>/dev/null; then
         cat >> "$BASHRC" <<'BASHRC_APPEND'
 
-# Claude OS
+# Agentic OS
 [[ -f /etc/profile.d/claude-env.sh ]] && source /etc/profile.d/claude-env.sh
 [[ -f /etc/profile.d/aliases.sh ]] && source /etc/profile.d/aliases.sh
 BASHRC_APPEND
@@ -223,8 +223,8 @@ BASHRC_APPEND
 
 setup_os_identity() {
     log "Setting OS identity..."
-    if [[ ! -f /etc/claude-os-release ]]; then
-        sudo cp "${ROOT_DIR}/rootfs/etc/claude-os-release" /etc/claude-os-release 2>/dev/null || true
+    if [[ ! -f /etc/agentic-os-release ]]; then
+        sudo cp "${ROOT_DIR}/rootfs/etc/agentic-os-release" /etc/agentic-os-release 2>/dev/null || true
     fi
     sudo cp "${ROOT_DIR}/rootfs/etc/motd" /etc/motd 2>/dev/null || true
     ok "OS identity configured"
@@ -233,7 +233,7 @@ setup_os_identity() {
 print_summary() {
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo -e "  ${GREEN}Claude OS tools installed successfully!${RESET}"
+    echo -e "  ${GREEN}Agentic OS tools installed successfully!${RESET}"
     echo ""
     echo "  Installed:"
     command -v claude   &>/dev/null && echo "  ✓ claude ($(claude --version 2>/dev/null | head -1))"
@@ -243,7 +243,7 @@ print_summary() {
     command -v claude-doctor &>/dev/null && echo "  ✓ claude-doctor"
     echo ""
     echo "  Next steps:"
-    echo "  1. Choose your AI tools:  claude-os-setup"
+    echo "  1. Choose your AI tools:  agentic-os-setup"
     echo "  2. Set your API key:      export ANTHROPIC_API_KEY='sk-ant-...'"
     echo "  3. Verify setup:          claude-doctor"
     echo "  4. List skills:           skills list"

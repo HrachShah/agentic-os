@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
-# Claude OS — Individual tool installer functions
-# Sourced by claude-os-setup and claude-os-init.sh
+# Agentic OS — Individual tool installer functions
+# Sourced by agentic-os-setup and agentic-os-init.sh
 # Each function: install_<toolid> <api_key_or_empty>
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; DIM='\033[2m'; RESET='\033[0m'
@@ -55,7 +55,7 @@ install_kilocode() {
         code --install-extension kilocode.kilocode --force 2>/dev/null && \
             ok "Kilocode (VS Code extension)" && return 0
     fi
-    printf 'kilocode.kilocode\n' >> "$HOME/.vscode/extensions/.claudeos-recommended"
+    printf 'kilocode.kilocode\n' >> "$HOME/.vscode/extensions/.agenticos-recommended"
     ok "Kilocode (queued for VS Code on next launch)"
     return 0
 }
@@ -67,7 +67,7 @@ install_cline() {
         code --install-extension saoudrizwan.claude-dev --force 2>/dev/null && \
             ok "Cline (VS Code extension)" && return 0
     fi
-    printf 'saoudrizwan.claude-dev\n' >> "$HOME/.vscode/extensions/.claudeos-recommended"
+    printf 'saoudrizwan.claude-dev\n' >> "$HOME/.vscode/extensions/.agenticos-recommended"
     ok "Cline (queued for VS Code on next launch)"
     return 0
 }
@@ -79,7 +79,7 @@ install_continue() {
         code --install-extension Continue.continue --force 2>/dev/null && \
             ok "Continue.dev (VS Code extension)" && return 0
     fi
-    printf 'Continue.continue\n' >> "$HOME/.vscode/extensions/.claudeos-recommended"
+    printf 'Continue.continue\n' >> "$HOME/.vscode/extensions/.agenticos-recommended"
     ok "Continue.dev (queued for VS Code on next launch)"
     return 0
 }
@@ -89,7 +89,7 @@ install_openclaw() {
     # Try pip, then npm, then GitHub clone
     pip_install openclaw 2>/dev/null && ok "OpenClaw" && return 0
     npm_install openclaw 2>/dev/null && ok "OpenClaw" && return 0
-    DEST="/usr/local/share/claude-os/tools/openclaw"
+    DEST="/usr/local/share/agentic-os/tools/openclaw"
     mkdir -p "$DEST"
     if git clone --depth=1 https://github.com/openclaw/openclaw "$DEST" 2>/dev/null; then
         pip_install -e "$DEST" 2>/dev/null || true

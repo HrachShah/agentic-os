@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Claude OS Skills Manager
+# Agentic OS Skills Manager
 # Manages Claude Code skills, antigravity skills, and gstack skills
 
 SKILLS_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
-ANTIGRAVITY_SKILLS="${ANTIGRAVITY_SKILLS:-/usr/local/share/claude-os/skills/antigravity}"
-GSTACK_SKILLS="${GSTACK_SKILLS:-/usr/local/share/claude-os/skills/gstack}"
-BUILTIN_SKILLS="/usr/local/share/claude-os/skills/builtin"
+ANTIGRAVITY_SKILLS="${ANTIGRAVITY_SKILLS:-/usr/local/share/agentic-os/skills/antigravity}"
+GSTACK_SKILLS="${GSTACK_SKILLS:-/usr/local/share/agentic-os/skills/gstack}"
+BUILTIN_SKILLS="/usr/local/share/agentic-os/skills/builtin"
 VERSION="1.0.0"
 
 # ── Colors ────────────────────────────────────────────────────────────────────
@@ -14,7 +14,7 @@ BLUE='\033[0;34m'; CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 
 usage() {
     cat <<EOF
-${BOLD}skills${RESET} — Claude OS skill manager v${VERSION}
+${BOLD}skills${RESET} — Agentic OS skill manager v${VERSION}
 
 ${BOLD}USAGE${RESET}
     skills <command> [args]

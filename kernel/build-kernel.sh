@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Claude OS kernel build script
-# Downloads Linux 6.6 LTS and builds with claude-os.config
+# Agentic OS kernel build script
+# Downloads Linux 6.6 LTS and builds with agentic-os.config
 set -euo pipefail
 
 KERNEL_VERSION="6.6.30"
@@ -8,10 +8,10 @@ KERNEL_URL="https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${KERNEL_VERSION}
 BUILD_DIR="$(dirname "$0")/../build/kernel"
 JOBS="${NPROC:-$(nproc)}"
 
-echo "── Claude OS Kernel Builder ──────────────────────────────"
+echo "── Agentic OS Kernel Builder ──────────────────────────────"
 echo "  Kernel:  Linux ${KERNEL_VERSION}"
 echo "  Jobs:    ${JOBS}"
-echo "  Config:  claude-os.config"
+echo "  Config:  agentic-os.config"
 echo "──────────────────────────────────────────────────────────"
 
 mkdir -p "${BUILD_DIR}"
@@ -30,8 +30,8 @@ fi
 
 cd "linux-${KERNEL_VERSION}"
 
-echo "→ Applying Claude OS kernel config..."
-cp "$(dirname "$0")/claude-os.config" .config
+echo "→ Applying Agentic OS kernel config..."
+cp "$(dirname "$0")/agentic-os.config" .config
 
 echo "→ Completing config with defaults..."
 make ARCH=x86_64 olddefconfig

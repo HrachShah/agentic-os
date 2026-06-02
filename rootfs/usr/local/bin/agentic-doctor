@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Claude OS system health checker
-# Run `claude-doctor` to verify your Claude OS environment
+# Agentic OS system health checker
+# Run `claude-doctor` to verify your Agentic OS environment
 
 BOLD='\033[1m'; GREEN='\033[0;32m'; RED='\033[0;31m'
 YELLOW='\033[1;33m'; CYAN='\033[0;36m'; RESET='\033[0m'
@@ -40,12 +40,12 @@ check_env() {
 
 echo ""
 echo "${BOLD}╔══════════════════════════════════════════════╗${RESET}"
-echo "${BOLD}║         Claude OS Health Report              ║${RESET}"
+echo "${BOLD}║         Agentic OS Health Report              ║${RESET}"
 echo "${BOLD}╚══════════════════════════════════════════════╝${RESET}"
 echo ""
 
 echo "${BOLD}── System ──────────────────────────────────────${RESET}"
-check "OS Release"      "cat /etc/claude-os-release 2>/dev/null | head -1" "Claude OS"
+check "OS Release"      "cat /etc/agentic-os-release 2>/dev/null | head -1" "Agentic OS"
 check "Kernel"          "uname -r"
 check "Architecture"    "uname -m" "x86_64"
 check "Hostname"        "hostname"
@@ -65,11 +65,11 @@ check "curl"            "curl --version | head -1"
 check "jq"              "jq --version"
 
 echo ""
-echo "${BOLD}── Claude OS Tools ─────────────────────────────${RESET}"
+echo "${BOLD}── Agentic OS Tools ─────────────────────────────${RESET}"
 check "hermes"          "which hermes"
 check "blackbox"        "which blackbox"
 check "skills"          "which skills"
-check "claude-os-setup" "which claude-os-setup"
+check "agentic-os-setup" "which agentic-os-setup"
 
 echo ""
 echo "${BOLD}── Optional AI Tools ───────────────────────────${RESET}"
@@ -80,7 +80,7 @@ for tool in opencode codex aider goose sweagent openclaw openhands; do
         printf "  %b %-30s %s\n" "${WARN}" "$tool" "not installed"
     fi
 done
-echo "  ${DIM}→ Run 'claude-os-setup' to add more tools${RESET}"
+echo "  ${DIM}→ Run 'agentic-os-setup' to add more tools${RESET}"
 
 echo ""
 echo "${BOLD}── Environment ─────────────────────────────────${RESET}"
@@ -100,7 +100,7 @@ else
     printf "  %b %-30s %s\n" "${WARN}" "Claude skills" "directory not found: $SKILLS_DIR"
 fi
 
-GSTACK="${GSTACK_SKILLS:-/usr/local/share/claude-os/skills/gstack}"
+GSTACK="${GSTACK_SKILLS:-/usr/local/share/agentic-os/skills/gstack}"
 if [[ -d "$GSTACK" ]]; then
     gcount=$(find "$GSTACK" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l)
     printf "  %b %-30s %s\n" "${PASS}" "gstack skills" "${gcount} installed"
@@ -121,5 +121,5 @@ check "settings.json"   "test -f $CLAUDE_DIR/settings.json && echo 'present'"
 
 echo ""
 echo "────────────────────────────────────────────────"
-echo "${BOLD}Claude OS $(cat /etc/claude-os-release 2>/dev/null | grep VERSION= | cut -d= -f2 | tr -d '"')${RESET}  |  $(date)"
+echo "${BOLD}Agentic OS $(cat /etc/agentic-os-release 2>/dev/null | grep VERSION= | cut -d= -f2 | tr -d '"')${RESET}  |  $(date)"
 echo ""

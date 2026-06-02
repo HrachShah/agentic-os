@@ -3,7 +3,7 @@ set -e
 
 echo ""
 echo "============================================"
-echo "  Claude OS Setup (Linux/macOS)"
+echo "  Agentic OS Setup (Linux/macOS)"
 echo "============================================"
 echo ""
 
@@ -24,7 +24,7 @@ npm run build
 echo ""
 echo "✓ Setup complete!"
 echo ""
-echo "To start Claude OS:"
+echo "To start Agentic OS:"
 echo "  cd backend && node server.js"
 echo ""
 echo "Or open http://localhost:3000"

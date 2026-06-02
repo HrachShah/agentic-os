@@ -156,10 +156,10 @@ export default function Settings({ winId }: Props) {
 
         {section === 'About' && (
           <div className="space-y-4">
-            <div className="text-white/90 font-semibold text-[14px] mb-3">About Claude OS</div>
+            <div className="text-white/90 font-semibold text-[14px] mb-3">About Agentic OS</div>
             <div className="bg-white/4 rounded-xl p-4 space-y-2">
               {[
-                ['Version', 'Claude OS 1.0.0'],
+                ['Version', 'Agentic OS 1.0.0'],
                 ['Kernel', 'Linux 6.6.30 LTS'],
                 ['Userspace', 'Alpine 3.20'],
                 ['Node', 'Bun 1.3'],

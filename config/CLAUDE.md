@@ -1,8 +1,8 @@
-# Claude OS - Pre-configured CLAUDE.md
+# Agentic OS - Pre-configured CLAUDE.md
 
 ## Environment
 
-- OS: Ubuntu 22.04 (Claude OS)
+- OS: Ubuntu 22.04 (Agentic OS)
 - Python: 3.11 — use `python3`
 - Package manager: uv (preferred)
 - JS: Node.js 20 / Bun 1.x / npm
@@ -22,7 +22,7 @@ All skills from the gstack library are pre-loaded:
 - /design-html, /webapp-testing, /clone-website
 - /autoplan, /careful, /freeze, /guard
 - /document-generate, /changelog-generator
-- And 80+ more (see /skills panel in Claude OS)
+- And 80+ more (see /skills panel in Agentic OS)
 
 ## Coding Behavior
 

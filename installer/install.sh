@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
-# Claude OS Disk Installer
-# Run from inside the LIVE Claude OS environment to install to a physical disk.
+# Agentic OS Disk Installer
+# Run from inside the LIVE Agentic OS environment to install to a physical disk.
 # This script is entirely self-contained — no external packages needed.
 
 set -e
@@ -19,7 +19,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 TARGET_DISK="${1:-}"
-HOSTNAME="${2:-claudeos}"
+HOSTNAME="${2:-agenticos}"
 USERNAME="${3:-claude}"
 
 # ── Disk selection ────────────────────────────────────────────────────────────
@@ -65,32 +65,32 @@ ok "Disk partitioned and formatted"
 
 # ── Mount and copy ────────────────────────────────────────────────────────────
 log "Mounting target..."
-mkdir -p /mnt/claudeos /mnt/claudeos/boot/efi
-mount "$ROOT" /mnt/claudeos
-mount "$EFI" /mnt/claudeos/boot/efi
+mkdir -p /mnt/agenticos /mnt/agenticos/boot/efi
+mount "$ROOT" /mnt/agenticos
+mount "$EFI" /mnt/agenticos/boot/efi
 
 log "Copying live filesystem to disk..."
 # If running from squashfs live, unsquash it
 SQUASH="/run/live/medium/live/filesystem.squashfs"
 if [ -f "$SQUASH" ]; then
-    unsquashfs -d /mnt/claudeos/ "$SQUASH"
+    unsquashfs -d /mnt/agenticos/ "$SQUASH"
     ok "Filesystem copied from live squashfs"
 else
     # Fallback: rsync running OS
     rsync -aAX --progress \
         --exclude={"/proc/*","/sys/*","/dev/*","/run/*","/tmp/*","/mnt/*"} \
-        / /mnt/claudeos/
+        / /mnt/agenticos/
     ok "Filesystem copied"
 fi
 
 # Copy kernel + initrd
-cp /boot/vmlinuz* /mnt/claudeos/boot/ 2>/dev/null || true
-cp /boot/initrd* /mnt/claudeos/boot/ 2>/dev/null || true
+cp /boot/vmlinuz* /mnt/agenticos/boot/ 2>/dev/null || true
+cp /boot/initrd* /mnt/agenticos/boot/ 2>/dev/null || true
 
 # ── fstab ─────────────────────────────────────────────────────────────────────
 ROOT_UUID=$(blkid -s UUID -o value "$ROOT")
 EFI_UUID=$(blkid -s UUID -o value "$EFI")
-cat > /mnt/claudeos/etc/fstab <<FSTAB
+cat > /mnt/agenticos/etc/fstab <<FSTAB
 UUID=${ROOT_UUID}  /          ext4  defaults,noatime  0 1
 UUID=${EFI_UUID}   /boot/efi  vfat  defaults          0 2
 tmpfs              /tmp       tmpfs defaults           0 0
@@ -100,48 +100,48 @@ ok "fstab written"
 # ── GRUB ──────────────────────────────────────────────────────────────────────
 log "Installing GRUB bootloader..."
 for bind in dev proc sys; do
-    mount --bind "/$bind" "/mnt/claudeos/$bind" 2>/dev/null || true
+    mount --bind "/$bind" "/mnt/agenticos/$bind" 2>/dev/null || true
 done
 
 # Install GRUB into the chroot
-chroot /mnt/claudeos grub-install \
+chroot /mnt/agenticos grub-install \
     --target=x86_64-efi \
     --efi-directory=/boot/efi \
-    --bootloader-id=ClaudeOS \
+    --bootloader-id=AgenticOS \
     --recheck 2>/dev/null || \
-chroot /mnt/claudeos grub-install \
+chroot /mnt/agenticos grub-install \
     --target=i386-pc "$TARGET_DISK" 2>/dev/null || \
 warn "GRUB install had warnings — boot may need manual fix"
 
-chroot /mnt/claudeos grub-mkconfig -o /boot/grub/grub.cfg 2>/dev/null || true
+chroot /mnt/agenticos grub-mkconfig -o /boot/grub/grub.cfg 2>/dev/null || true
 
 for bind in dev proc sys; do
-    umount "/mnt/claudeos/$bind" 2>/dev/null || true
+    umount "/mnt/agenticos/$bind" 2>/dev/null || true
 done
 
 # ── Hostname + user ───────────────────────────────────────────────────────────
 log "Configuring system..."
-echo "$HOSTNAME" > /mnt/claudeos/etc/hostname
-cat > /mnt/claudeos/etc/hosts <<HOSTS
+echo "$HOSTNAME" > /mnt/agenticos/etc/hostname
+cat > /mnt/agenticos/etc/hosts <<HOSTS
 127.0.0.1   localhost
 127.0.1.1   ${HOSTNAME}
 HOSTS
 
 # Create user if not exists
-if ! grep -q "^${USERNAME}:" /mnt/claudeos/etc/passwd 2>/dev/null; then
-    chroot /mnt/claudeos adduser -s /bin/sh -D "$USERNAME" 2>/dev/null || \
-    chroot /mnt/claudeos useradd -m -s /bin/bash "$USERNAME" 2>/dev/null || true
-    printf "%s:claude\n" "$USERNAME" | chroot /mnt/claudeos chpasswd 2>/dev/null || true
+if ! grep -q "^${USERNAME}:" /mnt/agenticos/etc/passwd 2>/dev/null; then
+    chroot /mnt/agenticos adduser -s /bin/sh -D "$USERNAME" 2>/dev/null || \
+    chroot /mnt/agenticos useradd -m -s /bin/bash "$USERNAME" 2>/dev/null || true
+    printf "%s:claude\n" "$USERNAME" | chroot /mnt/agenticos chpasswd 2>/dev/null || true
 fi
 
 # ── Finish ────────────────────────────────────────────────────────────────────
 sync
-umount /mnt/claudeos/boot/efi 2>/dev/null || true
-umount /mnt/claudeos 2>/dev/null || true
+umount /mnt/agenticos/boot/efi 2>/dev/null || true
+umount /mnt/agenticos 2>/dev/null || true
 
 echo ""
 printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
-ok "Claude OS installed to ${TARGET_DISK}"
+ok "Agentic OS installed to ${TARGET_DISK}"
 echo "  Login: ${USERNAME} / password: claude"
 echo "  Remove installation media and reboot."
 printf "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"

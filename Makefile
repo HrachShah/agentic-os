@@ -1,19 +1,19 @@
-# Claude OS — Build System
+# Agentic OS — Build System
 # Builds a standalone bootable ISO using Docker as the build environment.
 # No host Linux distro required — just Docker Desktop.
 #
 # Usage:
 #   make iso          Build the bootable ISO (requires Docker)
-#   make docker-run   Run Claude OS interactively in Docker
+#   make docker-run   Run Agentic OS interactively in Docker
 #   make install      Install tools on this machine
 
 SHELL       := /bin/bash
 VERSION     := 1.0.0
 ARCH        := amd64
-ISO_NAME    := claude-os-$(VERSION)-$(ARCH).iso
+ISO_NAME    := agentic-os-$(VERSION)-$(ARCH).iso
 OUTPUT_DIR  := build/output
-BUILDER_IMG := claude-os-builder:$(VERSION)
-RUNTIME_IMG := claude-os:$(VERSION)
+BUILDER_IMG := agentic-os-builder:$(VERSION)
+RUNTIME_IMG := agentic-os:$(VERSION)
 
 BOLD  := \033[1m
 GREEN := \033[0;32m
@@ -26,7 +26,7 @@ all: help
 
 # ── ISO (fully standalone, built in Docker from kernel source) ────────────────
 iso:
-	@echo -e "$(BOLD)Building Claude OS $(VERSION) bootable ISO...$(RESET)"
+	@echo -e "$(BOLD)Building Agentic OS $(VERSION) bootable ISO...$(RESET)"
 	@echo -e "$(CYAN)  All build steps run inside Docker — no host Linux needed$(RESET)"
 	@echo -e "$(CYAN)  First build downloads Linux 6.6 source and compiles it (~30 min)$(RESET)"
 	@echo ""
@@ -40,23 +40,23 @@ iso:
 	@echo -e "$(GREEN)✓ ISO built: $(OUTPUT_DIR)/$(ISO_NAME)$(RESET)"
 	@du -sh "$(OUTPUT_DIR)/$(ISO_NAME)" 2>/dev/null || true
 
-# ── Docker runtime image (for running Claude OS now, without a VM) ────────────
+# ── Docker runtime image (for running Agentic OS now, without a VM) ────────────
 docker:
-	@echo -e "$(BOLD)Building Claude OS Docker runtime image...$(RESET)"
+	@echo -e "$(BOLD)Building Agentic OS Docker runtime image...$(RESET)"
 	docker build --file docker/Dockerfile --tag $(RUNTIME_IMG) .
 	@echo -e "$(GREEN)✓ Image: $(RUNTIME_IMG)$(RESET)"
 
 docker-run: docker
-	@echo -e "$(BOLD)Starting Claude OS...$(RESET)"
+	@echo -e "$(BOLD)Starting Agentic OS...$(RESET)"
 	docker run -it --rm \
 		-e ANTHROPIC_API_KEY=$${ANTHROPIC_API_KEY:-} \
-		-v claude-os-workspace:/workspace \
-		--hostname claudeos \
+		-v agentic-os-workspace:/workspace \
+		--hostname agenticos \
 		$(RUNTIME_IMG)
 
 docker-compose:
-	docker compose -f docker/docker-compose.yml up -d claude-os
-	docker compose -f docker/docker-compose.yml exec claude-os bash
+	docker compose -f docker/docker-compose.yml up -d agentic-os
+	docker compose -f docker/docker-compose.yml exec agentic-os bash
 
 # ── Local install (Linux / WSL2 only) ─────────────────────────────────────────
 install:
@@ -89,7 +89,7 @@ clean:
 # ── Help ──────────────────────────────────────────────────────────────────────
 help:
 	@echo ""
-	@echo -e "$(BOLD)Claude OS $(VERSION) — Build System$(RESET)"
+	@echo -e "$(BOLD)Agentic OS $(VERSION) — Build System$(RESET)"
 	@echo ""
 	@echo -e "$(CYAN)Targets:$(RESET)"
 	@echo "  make iso            Build standalone bootable ISO"
@@ -97,8 +97,8 @@ help:
 	@echo "                          builds Alpine-based rootfs, packs into .iso"
 	@echo "                        → Needs: Docker Desktop (~30 min first build)"
 	@echo ""
-	@echo "  make docker         Build Claude OS Docker runtime image"
-	@echo "  make docker-run     Run Claude OS interactively in Docker NOW"
+	@echo "  make docker         Build Agentic OS Docker runtime image"
+	@echo "  make docker-run     Run Agentic OS interactively in Docker NOW"
 	@echo "  make install        Install tools on this Linux/WSL2 machine"
 	@echo "  make test-vm        Boot ISO in QEMU (needs QEMU + make iso first)"
 	@echo "  make flash DEVICE=  Flash ISO to USB drive"

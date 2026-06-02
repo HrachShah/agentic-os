@@ -30,7 +30,7 @@ export default function AITools({ winId }: Props) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/6">
         <div className="text-white/90 font-semibold text-[14px]">AI Tools</div>
-        <div className="text-white/35 text-[12px] mt-0.5">Manage AI coding assistants installed on Claude OS</div>
+        <div className="text-white/35 text-[12px] mt-0.5">Manage AI coding assistants installed on Agentic OS</div>
       </div>
 
       {/* List */}
@@ -75,7 +75,7 @@ export default function AITools({ winId }: Props) {
       </div>
 
       <div className="px-4 py-2 border-t border-white/6 text-[11px] text-white/25">
-        Run <span className="font-mono text-white/40">claude-os-setup</span> in terminal to manage tools
+        Run <span className="font-mono text-white/40">agentic-os-setup</span> in terminal to manage tools
       </div>
     </div>
   )

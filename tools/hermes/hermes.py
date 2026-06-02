@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Hermes — Claude OS AI Task Delegation Terminal
+Hermes — Agentic OS AI Task Delegation Terminal
 Run `hermes "task"` to delegate work to the Hermes AI agent.
 Hermes uses Claude Haiku for fast, cost-effective task execution.
 """
@@ -29,7 +29,7 @@ MAX_TOKENS = int(os.getenv("HERMES_MAX_TOKENS", "8192"))
 SKILLS_DIR = Path(os.getenv("CLAUDE_SKILLS_DIR", Path.home() / ".claude" / "skills"))
 CONFIG_DIR = Path(os.getenv("CLAUDE_CONFIG_DIR", Path.home() / ".claude"))
 
-HERMES_SYSTEM = """You are Hermes — the swift task-execution AI agent built into Claude OS.
+HERMES_SYSTEM = """You are Hermes — the swift task-execution AI agent built into Agentic OS.
 You are optimized for speed and precision. You:
 - Execute tasks directly without asking unnecessary clarifying questions
 - Write working code on the first try
@@ -37,16 +37,16 @@ You are optimized for speed and precision. You:
 - Use shell commands wrapped in ```bash blocks when execution is needed
 - Never produce boilerplate or filler text — only dense, valuable output
 - When given a file path, you read and act on it
-- Know about Claude Code, gstack skills, and the full Claude OS environment
+- Know about Claude Code, gstack skills, and the full Agentic OS environment
 
-Claude OS Environment:
+Agentic OS Environment:
 - Skills directory: ~/.claude/skills/
 - Run skills with: skills run <skill-name>
 - Claude Code CLI: claude
 - Blackbox coder: blackbox
 - Workspace: ~/workspace/
 
-You have access to all installed Claude OS skills and tools.
+You have access to all installed Agentic OS skills and tools.
 Be Hermes: fast, precise, messenger of the gods."""
 
 MODES = {
@@ -63,7 +63,7 @@ MODES = {
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="hermes",
-        description="Hermes — Claude OS AI Task Delegation Terminal",
+        description="Hermes — Agentic OS AI Task Delegation Terminal",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent("""
         Examples:
@@ -94,7 +94,7 @@ def build_parser() -> argparse.ArgumentParser:
 def get_api_key() -> str:
     key = os.getenv("ANTHROPIC_API_KEY")
     if not key:
-        # Try reading from Claude OS config
+        # Try reading from Agentic OS config
         key_file = CONFIG_DIR / "api_key"
         if key_file.exists():
             key = key_file.read_text().strip()

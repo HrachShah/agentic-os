@@ -1,4 +1,4 @@
-# Claude OS — Windows / WSL2 Quick Installer
+# Agentic OS — Windows / WSL2 Quick Installer
 # Run in PowerShell: .\install-windows.ps1
 # Or with API key: .\install-windows.ps1 -ApiKey "sk-ant-..."
 
@@ -20,7 +20,7 @@ function Write-Banner {
  ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗    ╚██████╔╝███████║
   ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚══════╝
 
-  Claude OS $CLAUDE_OS_VERSION — Windows Installer
+  Agentic OS $CLAUDE_OS_VERSION — Windows Installer
   ════════════════════════════════════════════════
 
 "@ -ForegroundColor Cyan
@@ -40,8 +40,8 @@ function Install-WithWinget($pkg, $id) {
     }
 }
 
-function Install-ClaudeOSInWSL {
-    Write-Host "`n[WSL2] Setting up Claude OS in WSL2..." -ForegroundColor Cyan
+function Install-AgenticOSInWSL {
+    Write-Host "`n[WSL2] Setting up Agentic OS in WSL2..." -ForegroundColor Cyan
 
     # Check WSL is available
     if (-not (Test-CommandExists "wsl")) {
@@ -58,7 +58,7 @@ function Install-ClaudeOSInWSL {
     # Convert Windows path to WSL path
     $wslRoot = wsl wslpath ($rootDir -replace '\\', '/')
 
-    Write-Host "→ Running Claude OS setup in WSL2..." -ForegroundColor Yellow
+    Write-Host "→ Running Agentic OS setup in WSL2..." -ForegroundColor Yellow
     wsl bash "$wslRoot/packages/setup-all.sh"
 
     # Set API key if provided
@@ -68,12 +68,12 @@ function Install-ClaudeOSInWSL {
         Write-Host "  ✓ API key configured in WSL" -ForegroundColor Green
     }
 
-    Write-Host "`n  ✓ Claude OS installed in WSL2!" -ForegroundColor Green
+    Write-Host "`n  ✓ Agentic OS installed in WSL2!" -ForegroundColor Green
     Write-Host "  Start it: wsl" -ForegroundColor White
 }
 
 function Install-WithDocker {
-    Write-Host "`n[Docker] Setting up Claude OS Docker container..." -ForegroundColor Cyan
+    Write-Host "`n[Docker] Setting up Agentic OS Docker container..." -ForegroundColor Cyan
 
     if (-not (Test-CommandExists "docker")) {
         Write-Host "Docker Desktop not found. Installing..." -ForegroundColor Yellow
@@ -85,24 +85,24 @@ function Install-WithDocker {
     $scriptDir = Split-Path -Parent $MyInvocation.ScriptName
     $rootDir = Split-Path -Parent $scriptDir
 
-    Write-Host "→ Building Claude OS Docker image..." -ForegroundColor Yellow
-    docker build -t "claude-os:$CLAUDE_OS_VERSION" -f "$rootDir\docker\Dockerfile" $rootDir
+    Write-Host "→ Building Agentic OS Docker image..." -ForegroundColor Yellow
+    docker build -t "agentic-os:$CLAUDE_OS_VERSION" -f "$rootDir\docker\Dockerfile" $rootDir
 
     # Create a launcher script
     $launcher = @"
 @echo off
 docker run -it --rm ^
     -e ANTHROPIC_API_KEY=%ANTHROPIC_API_KEY% ^
-    -v claude-os-workspace:/workspace ^
-    --hostname claudeos ^
-    claude-os:$CLAUDE_OS_VERSION
+    -v agentic-os-workspace:/workspace ^
+    --hostname agenticos ^
+    agentic-os:$CLAUDE_OS_VERSION
 "@
-    $launcherPath = "$env:USERPROFILE\Desktop\Claude OS.bat"
+    $launcherPath = "$env:USERPROFILE\Desktop\Agentic OS.bat"
     $launcher | Out-File -FilePath $launcherPath -Encoding ASCII
     Write-Host "  ✓ Desktop shortcut created: $launcherPath" -ForegroundColor Green
 
-    Write-Host "`n  ✓ Claude OS Docker image ready!" -ForegroundColor Green
-    Write-Host "  Run: docker run -it --rm -e ANTHROPIC_API_KEY=sk-ant-... claude-os:$CLAUDE_OS_VERSION" -ForegroundColor White
+    Write-Host "`n  ✓ Agentic OS Docker image ready!" -ForegroundColor Green
+    Write-Host "  Run: docker run -it --rm -e ANTHROPIC_API_KEY=sk-ant-... agentic-os:$CLAUDE_OS_VERSION" -ForegroundColor White
 }
 
 function Install-WindowsTools {
@@ -157,7 +157,7 @@ function Install-WindowsTools {
     }
 
     # Install hermes/blackbox as Windows commands
-    $toolsDir = "$env:USERPROFILE\.claude-os\tools"
+    $toolsDir = "$env:USERPROFILE\.agentic-os\tools"
     New-Item -ItemType Directory -Force $toolsDir | Out-Null
 
     $scriptDir = Split-Path -Parent $MyInvocation.ScriptName
@@ -170,16 +170,16 @@ function Install-WindowsTools {
     @"
 @echo off
 python "$toolsDir\hermes.py" %*
-"@ | Out-File "$env:USERPROFILE\.claude-os\hermes.bat" -Encoding ASCII
+"@ | Out-File "$env:USERPROFILE\.agentic-os\hermes.bat" -Encoding ASCII
 
     @"
 @echo off
 python "$toolsDir\blackbox.py" %*
-"@ | Out-File "$env:USERPROFILE\.claude-os\blackbox.bat" -Encoding ASCII
+"@ | Out-File "$env:USERPROFILE\.agentic-os\blackbox.bat" -Encoding ASCII
 
     # Add to PATH
     $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
-    $claudeOsBin = "$env:USERPROFILE\.claude-os"
+    $claudeOsBin = "$env:USERPROFILE\.agentic-os"
     if ($currentPath -notlike "*$claudeOsBin*") {
         [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$claudeOsBin", "User")
         Write-Host "  ✓ Added to PATH: $claudeOsBin" -ForegroundColor Green
@@ -193,7 +193,7 @@ python "$toolsDir\blackbox.py" %*
 
 function Set-ApiKey {
     if (-not $ApiKey) {
-        Write-Host "`n  Set your API key to use Claude OS tools:" -ForegroundColor Yellow
+        Write-Host "`n  Set your API key to use Agentic OS tools:" -ForegroundColor Yellow
         Write-Host "  `$env:ANTHROPIC_API_KEY = 'sk-ant-...'" -ForegroundColor White
         Write-Host "  Or add to system env variables" -ForegroundColor White
         return
@@ -206,7 +206,7 @@ function Show-Summary {
     Write-Host @"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Claude OS $CLAUDE_OS_VERSION — Installation Complete
+  Agentic OS $CLAUDE_OS_VERSION — Installation Complete
 
   On Windows (native):
     hermes "task"           -- AI task delegation
@@ -214,11 +214,11 @@ function Show-Summary {
     claude                  -- Claude Code CLI
 
   In WSL2 (full experience):
-    wsl                     -- Enter Claude OS environment
+    wsl                     -- Enter Agentic OS environment
     claude-doctor           -- Verify setup
 
   Via Docker:
-    docker run -it --rm -e ANTHROPIC_API_KEY=... claude-os:$CLAUDE_OS_VERSION
+    docker run -it --rm -e ANTHROPIC_API_KEY=... agentic-os:$CLAUDE_OS_VERSION
 
   Next: Set ANTHROPIC_API_KEY to activate all features
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -232,7 +232,7 @@ Install-WindowsTools
 Set-ApiKey
 
 if (-not $SkipWSL) {
-    Install-ClaudeOSInWSL
+    Install-AgenticOSInWSL
 }
 
 if ($DockerOnly) {

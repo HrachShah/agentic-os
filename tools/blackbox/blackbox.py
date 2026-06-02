@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Blackbox — Claude OS Coding Intelligence Terminal
+Blackbox — Agentic OS Coding Intelligence Terminal
 A Claude-powered coding assistant that lives in your terminal.
 Optimized for code generation, debugging, refactoring, and review.
 
@@ -33,7 +33,7 @@ DEFAULT_MODEL = os.getenv("BLACKBOX_MODEL", "claude-sonnet-4-6")
 MAX_TOKENS = int(os.getenv("BLACKBOX_MAX_TOKENS", "16384"))
 CONFIG_DIR = Path(os.getenv("CLAUDE_CONFIG_DIR", Path.home() / ".claude"))
 
-BLACKBOX_SYSTEM = """You are Blackbox — the Claude OS coding intelligence engine.
+BLACKBOX_SYSTEM = """You are Blackbox — the Agentic OS coding intelligence engine.
 You are a senior software engineer with expertise in every language and framework.
 
 Rules:
@@ -52,7 +52,7 @@ You know: Python, JavaScript/TypeScript, Rust, Go, Java, C/C++, Ruby, PHP,
 Swift, Kotlin, Dart, Elixir, Haskell, SQL, Bash, PowerShell, YAML, JSON,
 Dockerfile, Terraform, Kubernetes manifests, and more.
 
-Claude OS context:
+Agentic OS context:
 - Python projects: use `uv` as package manager
 - JS projects: prefer Bun over Node
 - Default formatter: ruff (Python), biome (JS/TS)
@@ -74,7 +74,7 @@ LANGUAGE_HINTS = {
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="blackbox",
-        description="Blackbox — Claude OS Coding Intelligence Terminal",
+        description="Blackbox — Agentic OS Coding Intelligence Terminal",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent("""
         Modes:

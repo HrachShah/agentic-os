@@ -1,11 +1,11 @@
-# Claude OS — Docker Image
-# A containerized Claude OS development environment
-# Usage: docker build -t claude-os . && docker run -it --rm claude-os
+# Agentic OS — Docker Image
+# A containerized Agentic OS development environment
+# Usage: docker build -t agentic-os . && docker run -it --rm agentic-os
 
 FROM debian:bookworm-slim
 
-LABEL maintainer="Claude OS Project"
-LABEL description="Claude OS — Claude Code-first developer OS"
+LABEL maintainer="Agentic OS Project"
+LABEL description="Agentic OS — Claude Code-first developer OS"
 LABEL version="1.0.0"
 
 # ── Base packages ─────────────────────────────────────────────────────────────
@@ -57,22 +57,22 @@ RUN pip install anthropic --quiet --no-cache-dir
 # ── Claude Code ───────────────────────────────────────────────────────────────
 RUN npm install -g @anthropic-ai/claude-code 2>/dev/null || true
 
-# ── Claude OS identity ────────────────────────────────────────────────────────
-COPY rootfs/etc/claude-os-release /etc/claude-os-release
+# ── Agentic OS identity ────────────────────────────────────────────────────────
+COPY rootfs/etc/agentic-os-release /etc/agentic-os-release
 COPY rootfs/etc/motd /etc/motd
 COPY rootfs/etc/profile.d/ /etc/profile.d/
 
-# ── Claude OS tools ───────────────────────────────────────────────────────────
-COPY tools/hermes/hermes.py /usr/local/share/claude-os/tools/hermes/hermes.py
-COPY tools/blackbox/blackbox.py /usr/local/share/claude-os/tools/blackbox/blackbox.py
+# ── Agentic OS tools ───────────────────────────────────────────────────────────
+COPY tools/hermes/hermes.py /usr/local/share/agentic-os/tools/hermes/hermes.py
+COPY tools/blackbox/blackbox.py /usr/local/share/agentic-os/tools/blackbox/blackbox.py
 
 RUN cat > /usr/local/bin/hermes <<'EOF'
 #!/usr/bin/env bash
-exec python3 /usr/local/share/claude-os/tools/hermes/hermes.py "$@"
+exec python3 /usr/local/share/agentic-os/tools/hermes/hermes.py "$@"
 EOF
 RUN cat > /usr/local/bin/blackbox <<'EOF'
 #!/usr/bin/env bash
-exec python3 /usr/local/share/claude-os/tools/blackbox/blackbox.py "$@"
+exec python3 /usr/local/share/agentic-os/tools/blackbox/blackbox.py "$@"
 EOF
 
 COPY rootfs/usr/local/bin/skills /usr/local/bin/skills
@@ -84,8 +84,8 @@ RUN chmod +x /usr/local/bin/hermes \
               /usr/local/bin/claude-doctor
 
 # ── Skills ────────────────────────────────────────────────────────────────────
-RUN mkdir -p /usr/local/share/claude-os/skills/{gstack,antigravity,builtin}
-COPY skills/ /usr/local/share/claude-os/skills/
+RUN mkdir -p /usr/local/share/agentic-os/skills/{gstack,antigravity,builtin}
+COPY skills/ /usr/local/share/agentic-os/skills/
 
 # ── Default Claude config ─────────────────────────────────────────────────────
 RUN mkdir -p /root/.claude/skills
@@ -103,22 +103,22 @@ ENV CLAUDE_OS_VERSION=1.0.0
 ENV CLAUDE_HOME=/root
 ENV CLAUDE_SKILLS_DIR=/root/.claude/skills
 ENV CLAUDE_CONFIG_DIR=/root/.claude
-ENV ANTIGRAVITY_SKILLS=/usr/local/share/claude-os/skills/antigravity
-ENV GSTACK_SKILLS=/usr/local/share/claude-os/skills/gstack
+ENV ANTIGRAVITY_SKILLS=/usr/local/share/agentic-os/skills/antigravity
+ENV GSTACK_SKILLS=/usr/local/share/agentic-os/skills/gstack
 ENV HERMES_MODEL=claude-haiku-4-5-20251001
 ENV BLACKBOX_MODEL=claude-sonnet-4-6
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # ── GUI (pre-built dist) ──────────────────────────────────────────────────────
-COPY gui/ /usr/local/share/claude-os/gui/
+COPY gui/ /usr/local/share/agentic-os/gui/
 RUN if command -v bun >/dev/null 2>&1; then \
-      cd /usr/local/share/claude-os/gui && bun install --frozen-lockfile 2>/dev/null || bun install; \
+      cd /usr/local/share/agentic-os/gui && bun install --frozen-lockfile 2>/dev/null || bun install; \
     fi
 
 WORKDIR /workspace
 
 EXPOSE 3000 4000 5001
 
-# Pass API key at runtime: docker run -e ANTHROPIC_API_KEY=sk-ant-... claude-os
+# Pass API key at runtime: docker run -e ANTHROPIC_API_KEY=sk-ant-... agentic-os
 CMD ["/bin/bash", "--login"]

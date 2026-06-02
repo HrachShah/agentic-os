@@ -1,4 +1,4 @@
-# Claude OS — Build Container
+# Agentic OS — Build Container
 # This runs on Windows/Mac/Linux via Docker Desktop.
 # It compiles everything from source and outputs a standalone bootable ISO.
 # Nothing here is Debian-specific — base image is Alpine.
@@ -29,7 +29,7 @@ RUN wget -q "https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${KERNEL_VERSION
     && rm "linux-${KERNEL_VERSION}.tar.xz"
 
 # ── Copy our kernel config ────────────────────────────────────────────────────
-COPY kernel/claude-os.config /build/linux-${KERNEL_VERSION}/.config
+COPY kernel/agentic-os.config /build/linux-${KERNEL_VERSION}/.config
 
 # ── Build the kernel ──────────────────────────────────────────────────────────
 RUN cd /build/linux-${KERNEL_VERSION} \
@@ -40,7 +40,7 @@ RUN cd /build/linux-${KERNEL_VERSION} \
 # ── Download and extract Alpine minirootfs as our userspace ──────────────────
 FROM alpine:3.20 AS rootfs-stage
 
-# Install everything Claude OS needs into a clean Alpine base
+# Install everything Agentic OS needs into a clean Alpine base
 RUN apk add --no-cache \
     # Core OS
     alpine-base bash shadow sudo \
@@ -69,31 +69,31 @@ RUN pip3 install anthropic --quiet --break-system-packages 2>/dev/null || \
 # Install Claude Code CLI
 RUN npm install -g @anthropic-ai/claude-code --quiet 2>/dev/null; exit 0
 
-# ── Overlay Claude OS files ───────────────────────────────────────────────────
-COPY rootfs/etc/claude-os-release /etc/claude-os-release
+# ── Overlay Agentic OS files ───────────────────────────────────────────────────
+COPY rootfs/etc/agentic-os-release /etc/agentic-os-release
 COPY rootfs/etc/motd /etc/motd
 COPY rootfs/etc/profile.d/ /etc/profile.d/
 COPY rootfs/usr/local/bin/ /usr/local/bin/
 COPY rootfs/home/claude/ /root/
-COPY tools/hermes/hermes.py /usr/local/share/claude-os/tools/hermes/hermes.py
-COPY tools/blackbox/blackbox.py /usr/local/share/claude-os/tools/blackbox/blackbox.py
-COPY skills/ /usr/local/share/claude-os/skills/
-COPY init/claude-os-init.sh /usr/local/share/claude-os/
-COPY init/claude-os.service /etc/init.d/claude-os
+COPY tools/hermes/hermes.py /usr/local/share/agentic-os/tools/hermes/hermes.py
+COPY tools/blackbox/blackbox.py /usr/local/share/agentic-os/tools/blackbox/blackbox.py
+COPY skills/ /usr/local/share/agentic-os/skills/
+COPY init/agentic-os-init.sh /usr/local/share/agentic-os/
+COPY init/agentic-os.service /etc/init.d/agentic-os
 
 RUN cat > /usr/local/bin/hermes <<'EOF'
 #!/usr/bin/env sh
-exec python3 /usr/local/share/claude-os/tools/hermes/hermes.py "$@"
+exec python3 /usr/local/share/agentic-os/tools/hermes/hermes.py "$@"
 EOF
 RUN cat > /usr/local/bin/blackbox <<'EOF'
 #!/usr/bin/env sh
-exec python3 /usr/local/share/claude-os/tools/blackbox/blackbox.py "$@"
+exec python3 /usr/local/share/agentic-os/tools/blackbox/blackbox.py "$@"
 EOF
 RUN chmod +x /usr/local/bin/hermes /usr/local/bin/blackbox \
               /usr/local/bin/skills /usr/local/bin/claude-doctor
 
 # Hostname
-RUN echo "claudeos" > /etc/hostname
+RUN echo "agenticos" > /etc/hostname
 RUN echo 'source /etc/profile.d/claude-env.sh 2>/dev/null || true' >> /root/.bashrc
 RUN echo 'source /etc/profile.d/aliases.sh 2>/dev/null || true' >> /root/.bashrc
 
@@ -104,12 +104,12 @@ FROM builder AS iso-builder
 COPY --from=rootfs-stage / /build/rootfs/
 
 # Copy kernel artifacts
-RUN cp /build/linux-6.6.30/arch/x86/boot/bzImage /build/vmlinuz-claudeos
+RUN cp /build/linux-6.6.30/arch/x86/boot/bzImage /build/vmlinuz-agenticos
 RUN cp -r /build/modules-staging/lib/modules /build/rootfs/lib/ 2>/dev/null; exit 0
 
 # Generate initramfs from rootfs
 RUN mkdir -p /build/iso/boot/grub /build/iso/live
-RUN cp /build/vmlinuz-claudeos /build/iso/boot/vmlinuz
+RUN cp /build/vmlinuz-agenticos /build/iso/boot/vmlinuz
 RUN (cd /build/rootfs && find . | cpio -H newc -o | gzip -9) > /build/iso/boot/initrd.img
 
 # Squash rootfs for live boot
@@ -125,7 +125,7 @@ COPY bootloader/grub.cfg /build/iso/boot/grub/grub.cfg
 
 # Build the ISO with GRUB (EFI + BIOS hybrid)
 RUN grub-mkrescue \
-    --output=/build/output/claude-os-1.0.0-amd64.iso \
+    --output=/build/output/agentic-os-1.0.0-amd64.iso \
     /build/iso \
     -- -volid "CLAUDEOS" \
     2>/dev/null || \
@@ -140,8 +140,8 @@ RUN grub-mkrescue \
         --efi-boot EFI/efi.img \
         -efi-boot-part --efi-boot-image \
         --protective-msdos-label \
-        -output /build/output/claude-os-1.0.0-amd64.iso \
+        -output /build/output/agentic-os-1.0.0-amd64.iso \
         /build/iso
 
 FROM scratch AS artifacts
-COPY --from=iso-builder /build/output/claude-os-1.0.0-amd64.iso /
+COPY --from=iso-builder /build/output/agentic-os-1.0.0-amd64.iso /

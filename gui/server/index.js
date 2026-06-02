@@ -1,4 +1,4 @@
-// Claude OS GUI backend — WebSocket terminal + Claude API proxy
+// Agentic OS GUI backend — WebSocket terminal + Claude API proxy
 // Run: bun run server
 import { serve } from 'bun'
 import { spawn } from 'child_process'
@@ -25,7 +25,7 @@ wss.on('connection', (ws) => {
   ws.on('close', () => proc.kill())
 })
 
-console.log(`[claude-os] Terminal WebSocket on ws://localhost:${PORT}`)
+console.log(`[agentic-os] Terminal WebSocket on ws://localhost:${PORT}`)
 
 // ─── HTTP Claude API proxy ─────────────────────────────────────────────────
 const server = http.createServer(async (req, res) => {
@@ -57,7 +57,7 @@ const server = http.createServer(async (req, res) => {
           model: 'claude-sonnet-4-6',
           max_tokens: 2048,
           messages,
-          system: 'You are Claude, running inside Claude OS — a Linux-based operating system dedicated to Claude Code. Be helpful, concise, and developer-focused.',
+          system: 'You are Claude, running inside Agentic OS — a Linux-based operating system dedicated to Claude Code. Be helpful, concise, and developer-focused.',
         }),
       })
 
@@ -78,4 +78,4 @@ const server = http.createServer(async (req, res) => {
   })
 })
 
-server.listen(API_PORT, () => console.log(`[claude-os] API proxy on http://localhost:${API_PORT}`))
+server.listen(API_PORT, () => console.log(`[agentic-os] API proxy on http://localhost:${API_PORT}`))

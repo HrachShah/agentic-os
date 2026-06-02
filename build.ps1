@@ -1,4 +1,4 @@
-# Claude OS — Windows Build Script
+# Agentic OS — Windows Build Script
 # Builds a fully standalone bootable ISO using Docker.
 # Requirements: Docker Desktop (running)
 # Usage: .\build.ps1
@@ -13,8 +13,8 @@ param(
 )
 
 $VERSION = "1.0.0"
-$IMAGE   = "claude-os-builder:$VERSION"
-$ISO     = "claude-os-$VERSION-amd64.iso"
+$IMAGE   = "agentic-os-builder:$VERSION"
+$ISO     = "agentic-os-$VERSION-amd64.iso"
 
 function Write-Step($msg) { Write-Host "  → $msg" -ForegroundColor Cyan }
 function Write-Ok($msg)   { Write-Host "  ✓ $msg" -ForegroundColor Green }
@@ -38,7 +38,7 @@ function Test-Docker {
 function Build-ISO {
     Write-Host ""
     Write-Host "  ╔══════════════════════════════════════════════╗" -ForegroundColor Magenta
-    Write-Host "  ║   Building Claude OS $VERSION ISO              ║" -ForegroundColor Magenta
+    Write-Host "  ║   Building Agentic OS $VERSION ISO              ║" -ForegroundColor Magenta
     Write-Host "  ║   This compiles the kernel from source.       ║" -ForegroundColor Magenta
     Write-Host "  ║   Estimated time: 20-40 min (first build)     ║" -ForegroundColor Magenta
     Write-Host "  ╚══════════════════════════════════════════════╝" -ForegroundColor Magenta
@@ -47,7 +47,7 @@ function Build-ISO {
     Test-Docker
     New-Item -ItemType Directory -Force $OutputDir | Out-Null
 
-    Write-Step "Building Claude OS in Docker (kernel + rootfs + ISO)..."
+    Write-Step "Building Agentic OS in Docker (kernel + rootfs + ISO)..."
     Write-Step "All build steps run inside Docker — no host Linux required."
     Write-Host ""
 
@@ -82,16 +82,16 @@ function Build-ISO {
 
 function Build-DockerImage {
     Write-Host ""
-    Write-Step "Building Claude OS Docker image..."
+    Write-Step "Building Agentic OS Docker image..."
     Test-Docker
 
     docker build `
         --file ".\docker\Dockerfile" `
-        --tag "claude-os:$VERSION" `
+        --tag "agentic-os:$VERSION" `
         .
 
     if ($LASTEXITCODE -eq 0) {
-        Write-Ok "Docker image built: claude-os:$VERSION"
+        Write-Ok "Docker image built: agentic-os:$VERSION"
         Write-Host "  Run: .\build.ps1 -Target docker-run" -ForegroundColor White
     }
 }
@@ -99,7 +99,7 @@ function Build-DockerImage {
 function Run-Docker {
     Test-Docker
 
-    if (-not (docker image inspect "claude-os:$VERSION" 2>&1 | Select-String "Id")) {
+    if (-not (docker image inspect "agentic-os:$VERSION" 2>&1 | Select-String "Id")) {
         Write-Step "Image not found, building first..."
         Build-DockerImage
     }
@@ -107,29 +107,29 @@ function Run-Docker {
     $envFlag = if ($ApiKey) { "-e ANTHROPIC_API_KEY=$ApiKey" } else { "" }
 
     Write-Host ""
-    Write-Host "  Starting Claude OS container..." -ForegroundColor Cyan
+    Write-Host "  Starting Agentic OS container..." -ForegroundColor Cyan
     Write-Host "  Type 'exit' to stop." -ForegroundColor DarkGray
     Write-Host ""
 
-    $cmd = "docker run -it --rm $envFlag -v claude-os-workspace:/workspace --hostname claudeos claude-os:$VERSION"
+    $cmd = "docker run -it --rm $envFlag -v agentic-os-workspace:/workspace --hostname agenticos agentic-os:$VERSION"
     Invoke-Expression $cmd
 }
 
 function Install-Local {
     Write-Host ""
-    Write-Step "Installing Claude OS tools on this Windows machine..."
+    Write-Step "Installing Agentic OS tools on this Windows machine..."
 
     # Check for WSL2
     $wslAvail = $null
     try { $wslAvail = wsl --status 2>&1 } catch {}
 
     if ($wslAvail) {
-        Write-Step "WSL2 detected — installing full Claude OS toolchain in WSL2..."
+        Write-Step "WSL2 detected — installing full Agentic OS toolchain in WSL2..."
         wsl bash -c "bash '$(wsl wslpath ($PSScriptRoot -replace '\\','/'))/packages/setup-all.sh'"
         if ($ApiKey) {
             wsl bash -c "echo 'export ANTHROPIC_API_KEY=$ApiKey' >> ~/.bashrc"
         }
-        Write-Ok "Full Claude OS installed in WSL2. Run: wsl"
+        Write-Ok "Full Agentic OS installed in WSL2. Run: wsl"
     } else {
         Write-Warn "WSL2 not found — installing Windows-native tools only."
         & "$PSScriptRoot\packages\install-windows.ps1" -ApiKey $ApiKey
@@ -139,12 +139,12 @@ function Install-Local {
 function Show-Help {
     Write-Host @"
 
-  Claude OS $VERSION — Build System
+  Agentic OS $VERSION — Build System
   ════════════════════════════════════════════════
 
   .\build.ps1 -Target iso          Build standalone bootable ISO (needs Docker)
-  .\build.ps1 -Target docker       Build Claude OS Docker image
-  .\build.ps1 -Target docker-run   Run Claude OS interactively in Docker
+  .\build.ps1 -Target docker       Build Agentic OS Docker image
+  .\build.ps1 -Target docker-run   Run Agentic OS interactively in Docker
   .\build.ps1 -Target install      Install tools on this machine (WSL2 or native)
 
   Options:

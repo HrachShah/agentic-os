@@ -1,9 +1,9 @@
 version: '3.9'
 
 services:
-  claude-os:
+  agentic-os:
     build: .
-    container_name: claude-os
+    container_name: agentic-os
     ports:
       - "3000:3000"
     volumes:
@@ -18,9 +18,9 @@ services:
     restart: unless-stopped
 
   # Dev mode (hot reload)
-  claude-os-dev:
+  agentic-os-dev:
     build: .
-    container_name: claude-os-dev
+    container_name: agentic-os-dev
     profiles: ["dev"]
     ports:
       - "3000:3000"

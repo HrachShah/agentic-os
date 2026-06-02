@@ -1,9 +1,9 @@
-# CLAUDE.md — Claude OS Default Configuration
-# Based on Andrej Karpathy's guidelines, extended for Claude OS
+# CLAUDE.md — Agentic OS Default Configuration
+# Based on Andrej Karpathy's guidelines, extended for Agentic OS
 
 ## Environment
 
-- **OS**: Claude OS 1.0.0 "Sonnet" (Linux-based)
+- **OS**: Agentic OS 1.0.0 "Sonnet" (Linux-based)
 - **Python**: 3.12 — use `python` (not `python3`)
 - **Package manager**: `uv` (preferred over pip)
 - **JS runtime**: Bun (preferred over Node/npm)

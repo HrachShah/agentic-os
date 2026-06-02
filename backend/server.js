@@ -441,7 +441,7 @@ app.get('*', (_, res) => {
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`\n🤖 Claude OS Backend running on http://localhost:${PORT}`);
+  console.log(`\n🤖 Agentic OS Backend running on http://localhost:${PORT}`);
   console.log(`   Claude Home: ${CLAUDE_HOME}`);
   console.log(`   Workspace:   ${WORKSPACE}`);
   console.log(`   Skills:      ${getSkills().length} loaded`);

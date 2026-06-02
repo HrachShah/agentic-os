@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Claude OS — Interactive Tool Setup Wizard
-Run on first boot or anytime: claude-os-setup
+Agentic OS — Interactive Tool Setup Wizard
+Run on first boot or anytime: agentic-os-setup
 """
 from __future__ import annotations
 import curses, json, os, subprocess, sys, textwrap, shutil, time
 from pathlib import Path
 
 VERSION = "1.0.0"
-CONFIG_FILE = Path.home() / ".claude" / "claude-os-tools.json"
+CONFIG_FILE = Path.home() / ".claude" / "agentic-os-tools.json"
 CONFIG_DIR  = Path.home() / ".claude"
 
 # ── Tool registry ─────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ TOOLS = [
     {
         "id": "claude-code",
         "label": "Claude Code",
-        "desc": "Anthropic's official agentic CLI — the core of Claude OS",
+        "desc": "Anthropic's official agentic CLI — the core of Agentic OS",
         "cat": "Core (Anthropic)",
         "default": True,
         "locked": True,   # always installed
@@ -197,7 +197,7 @@ def banner():
  ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗    ╚██████╔╝███████║
   ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚══════╝{C.RESET}
 
-{C.BOLD}  Tool Setup Wizard — Claude OS {VERSION}{C.RESET}
+{C.BOLD}  Tool Setup Wizard — Agentic OS {VERSION}{C.RESET}
   {C.DIM}Select which AI coding tools to install on this machine.{C.RESET}
 """)
 
@@ -364,7 +364,7 @@ def install_kilocode(t: dict, keys: dict) -> bool:
     print_step("Kilocode", "VS Code extension (installs when VS Code is opened)")
     # Write a VS Code extensions file so it auto-installs on next VS Code launch
     vscode_dir = Path.home() / ".vscode" / "extensions"
-    rec_file   = Path.home() / ".vscode" / "extensions" / ".claudeos-recommended"
+    rec_file   = Path.home() / ".vscode" / "extensions" / ".agenticos-recommended"
     vscode_dir.mkdir(parents=True, exist_ok=True)
     rec_file.write_text("kilocode.kilocode\n")
     # Try direct install if code is available
@@ -378,7 +378,7 @@ def install_cline(t: dict, keys: dict) -> bool:
         return run_cmd("code --install-extension saoudrizwan.claude-dev --force 2>/dev/null")
     vscode_dir = Path.home() / ".vscode" / "extensions"
     vscode_dir.mkdir(parents=True, exist_ok=True)
-    (vscode_dir / ".claudeos-recommended").open("a").write("saoudrizwan.claude-dev\n")
+    (vscode_dir / ".agenticos-recommended").open("a").write("saoudrizwan.claude-dev\n")
     return True
 
 def install_continue(t: dict, keys: dict) -> bool:
@@ -387,7 +387,7 @@ def install_continue(t: dict, keys: dict) -> bool:
         return run_cmd("code --install-extension Continue.continue --force 2>/dev/null")
     vscode_dir = Path.home() / ".vscode" / "extensions"
     vscode_dir.mkdir(parents=True, exist_ok=True)
-    (vscode_dir / ".claudeos-recommended").open("a").write("Continue.continue\n")
+    (vscode_dir / ".agenticos-recommended").open("a").write("Continue.continue\n")
     return True
 
 def install_openclaw(t: dict, keys: dict) -> bool:
@@ -398,7 +398,7 @@ def install_openclaw(t: dict, keys: dict) -> bool:
     if run_cmd("npm install -g openclaw --quiet 2>/dev/null"):
         return True
     # Clone from GitHub as fallback
-    install_dir = Path("/usr/local/share/claude-os/tools/openclaw")
+    install_dir = Path("/usr/local/share/agentic-os/tools/openclaw")
     install_dir.mkdir(parents=True, exist_ok=True)
     if run_cmd(f"git clone --depth=1 https://github.com/openclaw/openclaw {install_dir} 2>/dev/null"):
         run_cmd(f"pip install -e {install_dir} --quiet 2>/dev/null")
@@ -458,7 +458,7 @@ def run_installations(selected_ids: set[str], keys: dict[str, str]) -> dict[str,
             key_lines.append(f'export {env}="{val}"')
     if key_lines:
         with bashrc.open("a") as f:
-            f.write("\n# Claude OS API Keys (added by claude-os-setup)\n")
+            f.write("\n# Agentic OS API Keys (added by agentic-os-setup)\n")
             for line in key_lines:
                 f.write(line + "\n")
         # Also set in current process
@@ -583,5 +583,5 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n  Setup interrupted. Run 'claude-os-setup' to continue.\n")
+        print("\n\n  Setup interrupted. Run 'agentic-os-setup' to continue.\n")
         sys.exit(0)

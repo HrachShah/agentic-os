@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Claude OS ISO Builder — runs INSIDE the Docker build container
-# Input:  /build/rootfs (populated Alpine rootfs with Claude OS overlay)
-#         /build/vmlinuz-claudeos (compiled kernel)
-# Output: /build/output/claude-os-1.0.0-amd64.iso (standalone bootable ISO)
+# Agentic OS ISO Builder — runs INSIDE the Docker build container
+# Input:  /build/rootfs (populated Alpine rootfs with Agentic OS overlay)
+#         /build/vmlinuz-agenticos (compiled kernel)
+# Output: /build/output/agentic-os-1.0.0-amd64.iso (standalone bootable ISO)
 #
 # This script has NO dependency on any host Linux distro.
 # It runs inside the Alpine-based builder container.
@@ -11,12 +11,12 @@ set -euo pipefail
 
 VERSION="1.0.0"
 ARCH="amd64"
-ISO_NAME="claude-os-${VERSION}-${ARCH}.iso"
+ISO_NAME="agentic-os-${VERSION}-${ARCH}.iso"
 BUILD="/build"
 ISO_WORK="${BUILD}/iso-work"
 OUTPUT="${BUILD}/output"
 ROOTFS="${BUILD}/rootfs"
-KERNEL="${BUILD}/vmlinuz-claudeos"
+KERNEL="${BUILD}/vmlinuz-agenticos"
 INITRD="${ISO_WORK}/boot/initrd.img"
 SQUASH="${ISO_WORK}/live/filesystem.squashfs"
 
@@ -55,18 +55,18 @@ cat > "${ISO_WORK}/boot/grub/grub.cfg" <<'GRUBCFG'
 set default=0
 set timeout=5
 
-menuentry "Claude OS 1.0.0" --class linux {
-    echo "Loading Claude OS..."
+menuentry "Agentic OS 1.0.0" --class linux {
+    echo "Loading Agentic OS..."
     linux /boot/vmlinuz root=/dev/sr0 boot=live rw quiet loglevel=3 CLAUDE_OS=1
     initrd /boot/initrd.img
 }
 
-menuentry "Claude OS (verbose)" --class linux {
+menuentry "Agentic OS (verbose)" --class linux {
     linux /boot/vmlinuz root=/dev/sr0 boot=live rw loglevel=7 CLAUDE_OS=1
     initrd /boot/initrd.img
 }
 
-menuentry "Claude OS (RAM)" --class linux {
+menuentry "Agentic OS (RAM)" --class linux {
     linux /boot/vmlinuz root=/dev/sr0 boot=live rw toram quiet CLAUDE_OS=1
     initrd /boot/initrd.img
 }
@@ -113,8 +113,8 @@ xorriso -as mkisofs \
     -iso-level 3 \
     -volid "CLAUDEOS" \
     -full-iso9660-filenames \
-    -appid "Claude OS ${VERSION}" \
-    -publisher "Claude OS" \
+    -appid "Agentic OS ${VERSION}" \
+    -publisher "Agentic OS" \
     -eltorito-boot boot/grub/bios.img \
     -no-emul-boot -boot-load-size 4 -boot-info-table \
     --grub2-boot-info \

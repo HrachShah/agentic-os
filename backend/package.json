@@ -1,7 +1,7 @@
 {
-  "name": "claude-os-backend",
+  "name": "agentic-os-backend",
   "version": "1.0.0",
-  "description": "Claude OS backend - real-time activity monitor and API server",
+  "description": "Agentic OS backend - real-time activity monitor and API server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

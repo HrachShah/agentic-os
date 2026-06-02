@@ -1,9 +1,9 @@
 @echo off
-title Claude OS - Dev Mode
+title Agentic OS - Dev Mode
 
 echo.
 echo  ============================================
-echo    Claude OS - Development Mode
+echo    Agentic OS - Development Mode
 echo  ============================================
 echo.
 
@@ -24,7 +24,7 @@ echo [INFO] Dashboard: http://localhost:5173
 echo.
 
 :: Start backend in a new window
-start "Claude OS Backend" cmd /k "cd /d %~dp0.. && node backend\server.js"
+start "Agentic OS Backend" cmd /k "cd /d %~dp0.. && node backend\server.js"
 
 :: Start dashboard dev server
 echo [START] Starting dashboard dev server...

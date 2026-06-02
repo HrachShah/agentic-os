@@ -1,12 +1,12 @@
 [Unit]
-Description=Claude OS First Boot Setup
+Description=Agentic OS First Boot Setup
 After=network-online.target
 Wants=network-online.target
-ConditionPathExists=!/var/lib/claude-os/.first-boot-complete
+ConditionPathExists=!/var/lib/agentic-os/.first-boot-complete
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/share/claude-os/init/claude-os-init.sh
+ExecStart=/usr/local/share/agentic-os/init/agentic-os-init.sh
 RemainAfterExit=yes
 StandardOutput=journal+console
 StandardError=journal+console

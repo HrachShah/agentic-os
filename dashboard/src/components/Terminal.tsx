@@ -68,7 +68,7 @@ export function TerminalPanel() {
       t.writeln('\x1b[38;5;135m | |____| | (_| | |_| | (_| |  __/| |__| |____) |\x1b[0m');
       t.writeln('\x1b[38;5;135m  \\_____|_|\\__,_|\\__,_|\\__,_|\\___| \\____/|_____/ \x1b[0m');
       t.writeln('');
-      t.writeln('\x1b[90m  Claude OS Terminal — ready\x1b[0m');
+      t.writeln('\x1b[90m  Agentic OS Terminal — ready\x1b[0m');
       t.writeln('\x1b[90m  Type "claude" to start a session\x1b[0m');
       t.writeln('');
       t.write('\x1b[38;5;135m❯\x1b[0m ');

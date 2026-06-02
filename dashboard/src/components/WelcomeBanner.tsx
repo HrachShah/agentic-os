@@ -13,7 +13,7 @@ export function WelcomeBanner() {
                         flex items-center justify-center shadow-glow animate-pulse-slow">
           <span className="text-white text-2xl font-bold">C</span>
         </div>
-        <h1 className="text-xl font-bold text-os-text mb-2">Claude OS</h1>
+        <h1 className="text-xl font-bold text-os-text mb-2">Agentic OS</h1>
         <p className="text-sm text-os-text-dim mb-4">
           Connecting to backend server...
         </p>

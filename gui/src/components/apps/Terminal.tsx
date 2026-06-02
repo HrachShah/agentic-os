@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 interface Props { winId: string }
 
 const MOTD = `\x1b[35m   ______\x1b[0m
-\x1b[35m  / ____/\x1b[0m\x1b[1m\x1b[37m  Claude OS\x1b[0m  \x1b[2mv1.0\x1b[0m
+\x1b[35m  / ____/\x1b[0m\x1b[1m\x1b[37m  Agentic OS\x1b[0m  \x1b[2mv1.0\x1b[0m
 \x1b[35m / /   \x1b[0m   Type \x1b[33mhermes "task"\x1b[0m  for AI assistance
 \x1b[35m/ /___  \x1b[0m  Type \x1b[33mblackbox\x1b[0m      for coding AI
 \x1b[35m\\____/  \x1b[0m  Type \x1b[33mskills list\x1b[0m   for skill library
@@ -73,7 +73,7 @@ export default function Terminal({ winId }: Props) {
         fitRef.current = fit
 
         term.write(MOTD)
-        term.write('\x1b[32mclaude\x1b[0m@\x1b[35mclaudeos\x1b[0m:\x1b[34m~\x1b[0m$ ')
+        term.write('\x1b[32mclaude\x1b[0m@\x1b[35magenticos\x1b[0m:\x1b[34m~\x1b[0m$ ')
 
         // Try WebSocket
         try {
@@ -86,7 +86,7 @@ export default function Terminal({ winId }: Props) {
             term.onData((data) => {
               const code = data.charCodeAt(0)
               if (code === 13) {
-                term.write('\r\n\x1b[32mclaude\x1b[0m@\x1b[35mclaudeos\x1b[0m:\x1b[34m~\x1b[0m$ ')
+                term.write('\r\n\x1b[32mclaude\x1b[0m@\x1b[35magenticos\x1b[0m:\x1b[34m~\x1b[0m$ ')
               } else if (code === 127) {
                 term.write('\b \b')
               } else {
@@ -133,14 +133,14 @@ export default function Terminal({ winId }: Props) {
         className="h-full flex flex-col font-mono text-[13px] bg-transparent text-green-400 p-3 overflow-hidden cursor-text"
         onClick={() => inputRef.current?.focus()}
       >
-        <div className="text-purple-400 mb-2 text-[11px] whitespace-pre">{`  Claude OS Terminal\n  hermes | blackbox | skills`}</div>
+        <div className="text-purple-400 mb-2 text-[11px] whitespace-pre">{`  Agentic OS Terminal\n  hermes | blackbox | skills`}</div>
         <div className="flex-1 overflow-y-auto space-y-0.5">
           {lines.map((l, i) => (
             <div key={i} className={l.startsWith('$') ? 'text-white/70' : 'text-green-300/80'}>{l}</div>
           ))}
         </div>
         <div className="flex items-center gap-1 mt-1">
-          <span className="text-green-400">claude@claudeos:~$</span>
+          <span className="text-green-400">claude@agenticos:~$</span>
           <input
             ref={inputRef}
             value={input}

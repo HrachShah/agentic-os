@@ -66,7 +66,7 @@ export default function MenuBar() {
           className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-md hover:bg-white/8 transition-colors"
         >
           <ClaudeLogo />
-          <span className="text-white/90 text-[13px] font-semibold">Claude OS</span>
+          <span className="text-white/90 text-[13px] font-semibold">Agentic OS</span>
         </button>
 
         {activeWin && (

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Claude OS — Primary Init Script (PID 1 alternative / systemd unit)
+# Agentic OS — Primary Init Script (PID 1 alternative / systemd unit)
 # Called during first boot to complete OS setup
 
 set -euo pipefail
 
-LOG="/var/log/claude-os-init.log"
+LOG="/var/log/agentic-os-init.log"
 CLAUDE_HOME="/home/claude"
 CLAUDE_USER="claude"
 
@@ -24,7 +24,7 @@ cat <<'EOF'
  ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗    ╚██████╔╝███████║
   ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝     ╚═════╝ ╚══════╝
 
-  Claude OS 1.0.0 "Sonnet" — First Boot Setup
+  Agentic OS 1.0.0 "Sonnet" — First Boot Setup
   ─────────────────────────────────────────────
 
 EOF
@@ -48,11 +48,11 @@ setup_directories() {
         "${CLAUDE_HOME}/.claude/memory"
         "${CLAUDE_HOME}/workspace"
         "${CLAUDE_HOME}/projects"
-        "/usr/local/share/claude-os/skills/gstack"
-        "/usr/local/share/claude-os/skills/antigravity"
-        "/usr/local/share/claude-os/skills/builtin"
-        "/usr/local/share/claude-os/bin"
-        "/var/log/claude-os"
+        "/usr/local/share/agentic-os/skills/gstack"
+        "/usr/local/share/agentic-os/skills/antigravity"
+        "/usr/local/share/agentic-os/skills/builtin"
+        "/usr/local/share/agentic-os/bin"
+        "/var/log/agentic-os"
     )
     for dir in "${dirs[@]}"; do
         mkdir -p "$dir"
@@ -99,12 +99,12 @@ install_claude_code() {
 
 install_hermes() {
     log "Installing Hermes AI terminal..."
-    cp /usr/local/share/claude-os/tools/hermes/hermes.py /usr/local/bin/hermes
+    cp /usr/local/share/agentic-os/tools/hermes/hermes.py /usr/local/bin/hermes
     chmod +x /usr/local/bin/hermes
     # Create wrapper that resolves python path
     cat > /usr/local/bin/hermes <<'WRAP'
 #!/usr/bin/env bash
-exec python /usr/local/share/claude-os/tools/hermes/hermes.py "$@"
+exec python /usr/local/share/agentic-os/tools/hermes/hermes.py "$@"
 WRAP
     chmod +x /usr/local/bin/hermes
     ok "Hermes installed"
@@ -112,10 +112,10 @@ WRAP
 
 install_blackbox() {
     log "Installing Blackbox coding terminal..."
-    cp /usr/local/share/claude-os/tools/blackbox/blackbox.py /usr/local/share/claude-os/tools/blackbox/
+    cp /usr/local/share/agentic-os/tools/blackbox/blackbox.py /usr/local/share/agentic-os/tools/blackbox/
     cat > /usr/local/bin/blackbox <<'WRAP'
 #!/usr/bin/env bash
-exec python /usr/local/share/claude-os/tools/blackbox/blackbox.py "$@"
+exec python /usr/local/share/agentic-os/tools/blackbox/blackbox.py "$@"
 WRAP
     chmod +x /usr/local/bin/blackbox
     ok "Blackbox installed"
@@ -123,24 +123,24 @@ WRAP
 
 install_skills() {
     log "Installing pre-bundled skills..."
-    local skills_src="/usr/local/share/claude-os/skills-bundle"
+    local skills_src="/usr/local/share/agentic-os/skills-bundle"
     if [[ -d "$skills_src/gstack" ]]; then
-        cp -r "$skills_src/gstack/." "/usr/local/share/claude-os/skills/gstack/"
+        cp -r "$skills_src/gstack/." "/usr/local/share/agentic-os/skills/gstack/"
         ok "gstack skills installed"
     fi
     if [[ -d "$skills_src/antigravity" ]]; then
-        cp -r "$skills_src/antigravity/." "/usr/local/share/claude-os/skills/antigravity/"
+        cp -r "$skills_src/antigravity/." "/usr/local/share/agentic-os/skills/antigravity/"
         ok "antigravity skills installed"
     fi
     if [[ -d "$skills_src/builtin" ]]; then
-        cp -r "$skills_src/builtin/." "/usr/local/share/claude-os/skills/builtin/"
+        cp -r "$skills_src/builtin/." "/usr/local/share/agentic-os/skills/builtin/"
         ok "builtin skills installed"
     fi
 }
 
 copy_claude_config() {
     log "Setting up Claude configuration..."
-    local config_src="/usr/local/share/claude-os/default-config"
+    local config_src="/usr/local/share/agentic-os/default-config"
     if [[ -d "$config_src" ]]; then
         cp -n "$config_src/CLAUDE.md" "${CLAUDE_HOME}/.claude/CLAUDE.md" 2>/dev/null || true
         cp -n "$config_src/settings.json" "${CLAUDE_HOME}/.claude/settings.json" 2>/dev/null || true
@@ -155,11 +155,11 @@ setup_shell() {
     if ! grep -q "claude-env.sh" "${CLAUDE_HOME}/.bashrc" 2>/dev/null; then
         cat >> "${CLAUDE_HOME}/.bashrc" <<'BASHRC'
 
-# Claude OS
+# Agentic OS
 [[ -f /etc/profile.d/claude-env.sh ]] && source /etc/profile.d/claude-env.sh
 [[ -f /etc/profile.d/aliases.sh ]] && source /etc/profile.d/aliases.sh
 
-# Claude OS welcome (first login only)
+# Agentic OS welcome (first login only)
 if [[ -z "$CLAUDE_OS_WELCOMED" ]]; then
     export CLAUDE_OS_WELCOMED=1
     cat /etc/motd
@@ -175,33 +175,33 @@ run_tool_wizard() {
     log "Launching AI tool selection wizard..."
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  Claude OS — AI Tool Setup"
+    echo "  Agentic OS — AI Tool Setup"
     echo "  Choose which AI coding tools to install."
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
     # Run wizard as the claude user
     if id "${CLAUDE_USER}" &>/dev/null; then
-        su -c "python3 /usr/local/bin/claude-os-setup" "${CLAUDE_USER}" || \
-        python3 /usr/local/bin/claude-os-setup || \
-        log "Tool wizard skipped — run 'claude-os-setup' after login"
+        su -c "python3 /usr/local/bin/agentic-os-setup" "${CLAUDE_USER}" || \
+        python3 /usr/local/bin/agentic-os-setup || \
+        log "Tool wizard skipped — run 'agentic-os-setup' after login"
     else
-        python3 /usr/local/bin/claude-os-setup || \
-        log "Tool wizard skipped — run 'claude-os-setup' after login"
+        python3 /usr/local/bin/agentic-os-setup || \
+        log "Tool wizard skipped — run 'agentic-os-setup' after login"
     fi
 }
 
 mark_first_boot_done() {
-    mkdir -p /var/lib/claude-os
-    touch /var/lib/claude-os/.first-boot-complete
-    echo "$(date -Iseconds)" > /var/lib/claude-os/install-date
+    mkdir -p /var/lib/agentic-os
+    touch /var/lib/agentic-os/.first-boot-complete
+    echo "$(date -Iseconds)" > /var/lib/agentic-os/install-date
     ok "First boot setup complete"
 }
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 main() {
     banner
-    log "Starting Claude OS first-boot setup..."
+    log "Starting Agentic OS first-boot setup..."
 
     setup_user
     setup_directories
@@ -222,7 +222,7 @@ main() {
     else
         echo ""
         echo "  Headless boot detected — skipping interactive tool wizard."
-        echo "  Run 'claude-os-setup' after logging in to choose your AI tools."
+        echo "  Run 'agentic-os-setup' after logging in to choose your AI tools."
         echo ""
     fi
 
@@ -230,15 +230,15 @@ main() {
 
     echo ""
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  Claude OS is ready. Log in as: claude / password: claude"
-    echo "  Run 'claude-os-setup'   to manage AI tools"
+    echo "  Agentic OS is ready. Log in as: claude / password: claude"
+    echo "  Run 'agentic-os-setup'   to manage AI tools"
     echo "  Run 'claude-doctor'     to verify your setup"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 }
 
 # Only run full setup on first boot
-if [[ -f /var/lib/claude-os/.first-boot-complete ]]; then
+if [[ -f /var/lib/agentic-os/.first-boot-complete ]]; then
     log "First boot already completed — skipping setup"
     exit 0
 fi

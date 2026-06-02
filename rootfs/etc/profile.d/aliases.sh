@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Claude OS — shell aliases
+# Agentic OS — shell aliases
 
 # Navigation
 alias ll='ls -lah --color=auto'
@@ -53,7 +53,7 @@ alias pbpaste='xclip -selection clipboard -o 2>/dev/null || wl-paste 2>/dev/null
 
 # System info
 alias sysinfo='claude-doctor'
-alias os-version='cat /etc/claude-os-release'
+alias os-version='cat /etc/agentic-os-release'
 
 # Quick workspace access
 alias ws='cd ~/workspace'

@@ -1,6 +1,6 @@
-# claude-os-help
+# agentic-os-help
 
-Complete reference for Claude OS tools, commands, and skills.
+Complete reference for Agentic OS tools, commands, and skills.
 
 ## Quick Reference
 

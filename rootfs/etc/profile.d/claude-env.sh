@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Claude OS — global environment setup
+# Agentic OS — global environment setup
 # Sourced for all login shells
 
-# ── Claude OS identity ────────────────────────────────────────────────────────
+# ── Agentic OS identity ────────────────────────────────────────────────────────
 export CLAUDE_OS=1
 export CLAUDE_OS_VERSION="1.0.0"
 export CLAUDE_OS_CODENAME="Sonnet"
@@ -11,15 +11,15 @@ export CLAUDE_OS_CODENAME="Sonnet"
 export CLAUDE_HOME="/home/claude"
 export CLAUDE_SKILLS_DIR="/home/claude/.claude/skills"
 export CLAUDE_CONFIG_DIR="/home/claude/.claude"
-export ANTIGRAVITY_SKILLS="/usr/local/share/claude-os/skills/antigravity"
-export GSTACK_SKILLS="/usr/local/share/claude-os/skills/gstack"
+export ANTIGRAVITY_SKILLS="/usr/local/share/agentic-os/skills/antigravity"
+export GSTACK_SKILLS="/usr/local/share/agentic-os/skills/gstack"
 
 export PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin"
 export PATH="${CLAUDE_HOME}/.local/bin:${PATH}"
 export PATH="${CLAUDE_HOME}/.bun/bin:${PATH}"
 export PATH="${CLAUDE_HOME}/.cargo/bin:${PATH}"
 export PATH="${CLAUDE_HOME}/.deno/bin:${PATH}"
-export PATH="/usr/local/share/claude-os/bin:${PATH}"
+export PATH="/usr/local/share/agentic-os/bin:${PATH}"
 
 # ── Editor / pager ────────────────────────────────────────────────────────────
 export EDITOR="nano"
@@ -60,14 +60,14 @@ export LC_ALL="en_US.UTF-8"
 
 # ── First-login tool wizard trigger ──────────────────────────────────────────
 # If tools have never been configured and we have a real TTY, launch the wizard.
-_TOOLS_CONFIG="${CLAUDE_HOME:-$HOME}/.claude/claude-os-tools.json"
+_TOOLS_CONFIG="${CLAUDE_HOME:-$HOME}/.claude/agentic-os-tools.json"
 if [[ ! -f "$_TOOLS_CONFIG" ]] && [[ -t 0 ]] && [[ -z "$CLAUDE_OS_SETUP_DONE" ]]; then
     export CLAUDE_OS_SETUP_DONE=1
     echo ""
-    echo "  Welcome to Claude OS! Let's set up your AI tools."
-    echo "  (Press Ctrl+C to skip and run 'claude-os-setup' later)"
+    echo "  Welcome to Agentic OS! Let's set up your AI tools."
+    echo "  (Press Ctrl+C to skip and run 'agentic-os-setup' later)"
     echo ""
     sleep 2
-    python3 /usr/local/bin/claude-os-setup 2>/dev/null || true
+    python3 /usr/local/bin/agentic-os-setup 2>/dev/null || true
 fi
 unset _TOOLS_CONFIG

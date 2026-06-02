@@ -41,7 +41,7 @@ export function StatusBar() {
           <div className="w-5 h-5 rounded-full bg-gradient-to-br from-os-accent to-os-pink flex items-center justify-center shadow-accent">
             <span className="text-white text-[9px] font-bold">C</span>
           </div>
-          <span className="text-sm font-semibold text-os-text tracking-tight">Claude OS</span>
+          <span className="text-sm font-semibold text-os-text tracking-tight">Agentic OS</span>
         </div>
 
         <div className="w-px h-4 bg-os-border" />

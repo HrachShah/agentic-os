@@ -1,7 +1,7 @@
 #!/bin/sh
-# Launch Claude OS GUI — called at boot by OpenRC
+# Launch Agentic OS GUI — called at boot by OpenRC
 
-GUI_DIR="/usr/local/share/claude-os/gui"
+GUI_DIR="/usr/local/share/agentic-os/gui"
 LOG="/var/log/claude-gui.log"
 
 echo "[claude-gui] Starting backend server..." >> "$LOG"

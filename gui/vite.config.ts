@@ -11,7 +11,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../rootfs/usr/local/share/claude-os/gui/dist',
+    outDir: '../rootfs/usr/local/share/agentic-os/gui/dist',
     emptyOutDir: true,
   },
 })

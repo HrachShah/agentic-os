@@ -1,14 +1,14 @@
 version: '3.9'
 
 services:
-  # ── Claude OS main shell ──────────────────────────────────────────────────
-  claude-os:
+  # ── Agentic OS main shell ──────────────────────────────────────────────────
+  agentic-os:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: claude-os:1.0.0
-    container_name: claude-os
-    hostname: claudeos
+    image: agentic-os:1.0.0
+    container_name: agentic-os
+    hostname: agenticos
     tty: true
     stdin_open: true
     environment:
@@ -30,7 +30,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: claude-os:1.0.0
+    image: agentic-os:1.0.0
     container_name: hermes-daemon
     hostname: hermes
     environment:
@@ -43,7 +43,7 @@ services:
     networks:
       - claude-net
     command: >
-      python3 /usr/local/share/claude-os/tools/hermes/hermes.py
+      python3 /usr/local/share/agentic-os/tools/hermes/hermes.py
       --interactive
     profiles:
       - daemon
@@ -53,7 +53,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: claude-os:1.0.0
+    image: agentic-os:1.0.0
     container_name: blackbox-server
     hostname: blackbox
     environment:
@@ -63,21 +63,21 @@ services:
       - claude-workspace:/workspace
     networks:
       - claude-net
-    command: python3 /usr/local/share/claude-os/tools/blackbox/blackbox.py --interactive
+    command: python3 /usr/local/share/agentic-os/tools/blackbox/blackbox.py --interactive
     profiles:
       - daemon
 
 volumes:
   claude-workspace:
-    name: claude-os-workspace
+    name: agentic-os-workspace
   claude-home:
-    name: claude-os-home
+    name: agentic-os-home
   claude-config:
-    name: claude-os-config
+    name: agentic-os-config
   hermes-queue:
-    name: claude-os-hermes-queue
+    name: agentic-os-hermes-queue
 
 networks:
   claude-net:
-    name: claude-os-network
+    name: agentic-os-network
     driver: bridge

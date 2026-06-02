@@ -1,9 +1,9 @@
 @echo off
-title Claude OS
+title Agentic OS
 
 echo.
 echo  ============================================
-echo    Claude OS - Starting...
+echo    Agentic OS - Starting...
 echo  ============================================
 echo.
 
@@ -40,7 +40,7 @@ echo [INFO] Port:        %PORT%
 echo.
 
 :: Start backend
-echo [START] Starting Claude OS on http://localhost:%PORT%
+echo [START] Starting Agentic OS on http://localhost:%PORT%
 echo.
 start "" http://localhost:%PORT%
 node backend\server.js

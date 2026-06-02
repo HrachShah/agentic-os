@@ -62,7 +62,7 @@ export default function ClaudeChat({ winId }: Props) {
     } catch {
       setMessages(m => [...m, {
         role: 'assistant',
-        content: 'Cannot reach backend. In the terminal, run:\n`cd ~/claude-os/gui && bun run server`',
+        content: 'Cannot reach backend. In the terminal, run:\n`cd ~/agentic-os/gui && bun run server`',
         ts: new Date()
       }])
     }
