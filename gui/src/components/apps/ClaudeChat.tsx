@@ -59,7 +59,7 @@ export default function ClaudeChat({ winId }: Props) {
       } else {
         setMessages(m => [...m, { role: 'assistant', content: 'API not available. Start the backend server with `bun run server`.', ts: new Date() }])
       }
-    } catch {
+    } catch (e: unknown) {
       setMessages(m => [...m, {
         role: 'assistant',
         content: 'Cannot reach backend. In the terminal, run:\n`cd ~/agentic-os/gui && bun run server`',

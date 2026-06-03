@@ -95,15 +95,15 @@ export default function Terminal({ winId }: Props) {
             })
           }
           term.onData((data) => { if (ws.readyState === WebSocket.OPEN) ws.send(data) })
-        } catch {
-          // No WS support
+        } catch (e: unknown) {
+          console.error("[WS] connection setup failed", e);
         }
 
         const ro = new ResizeObserver(() => fit.fit())
         ro.observe(containerRef.current)
         return () => ro.disconnect()
-      } catch {
-        if (mounted) setFallback(true)
+      } catch (e: unknown) {
+        console.error("[Terminal] xterm load failed, using fallback", e);
       }
     }
 

@@ -11,7 +11,7 @@ function safeRelativeTime(dateStr: string): string {
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
     return `${Math.floor(diff / 86400000)}d ago`;
-  } catch { return 'unknown'; }
+  } catch (e: unknown) { return 'unknown'; }
 }
 import { motion } from 'framer-motion';
 

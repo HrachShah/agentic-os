@@ -36,7 +36,7 @@ export function useWebSocket() {
       try {
         const msg = JSON.parse(e.data);
         handleMessage(msg);
-      } catch {}
+      } catch (e: unknown) { console.error("[WS] failed to parse message", e); }
     };
   }
 

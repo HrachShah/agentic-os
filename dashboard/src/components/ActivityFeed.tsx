@@ -12,7 +12,7 @@ function safeRelativeTime(ts: number): string {
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
     return `${Math.floor(diff / 86400000)}d ago`;
-  } catch { return ''; }
+  } catch (e: unknown) { return ''; }
 }
 import { Circle, CheckCircle2, XCircle, Filter, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
