@@ -56,7 +56,9 @@ wss.on('connection', (ws) => {
     try {
       const msg = JSON.parse(raw.toString());
       handleClientMessage(ws, msg);
-    } catch {}
+    } catch (e) {
+      console.warn('[WS] Dropping unparseable message from client:', e.message);
+    }
   });
 });
 
@@ -205,7 +207,10 @@ function getRecentActivity(limit = 100) {
     }
 
     return entries.sort((a, b) => b.ts - a.ts).slice(0, limit);
-  } catch { return []; }
+  } catch (e) {
+    console.warn('[history] getRecentActivity failed:', e.message);
+    return [];
+  }
 }
 
 function parseTranscriptEntry(entry) {
