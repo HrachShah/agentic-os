@@ -98,7 +98,29 @@ function getSkills() {
     .filter(name => !name.startsWith('.'))
     .map(name => {
       const skillPath = path.join(SKILLS_DIR, name);
-      const stat = fs.statSync(skillPath);
+      let stat;
+      try {
+        stat = fs.statSync(skillPath);
+      } catch (e) {
+        console.warn(`[skills] skipping ${name}: ${e.message}`);
+        return null;
+      }
+      // Skip symlinks that resolve outside SKILLS_DIR to prevent arbitrary file reads
+      if (stat.isSymbolicLink()) {
+        let real;
+        try {
+          real = fs.realpathSync(skillPath);
+        } catch (e) {
+          console.warn(`[skills] skipping symlink ${name}: ${e.message}`);
+          return null;
+        }
+        const realSkills = fs.realpathSync(SKILLS_DIR);
+        if (!real.startsWith(realSkills + path.sep) && real !== realSkills) {
+          console.warn(`[skills] skipping symlink ${name} pointing outside SKILLS_DIR`);
+          return null;
+        }
+        stat = fs.statSync(real);
+      }
       let description = '';
       let category = 'general';
 
@@ -119,7 +141,9 @@ function getSkills() {
             else if (/doc|generate|write/i.test(content)) category = 'docs';
             else if (/plan|arch|design/i.test(content)) category = 'planning';
             else category = 'tools';
-          } catch {}
+          } catch (e) {
+            console.warn(`[skills] could not read ${fp}: ${e.message}`);
+          }
           break;
         }
       }
@@ -131,7 +155,8 @@ function getSkills() {
         path: skillPath,
         modified: stat.mtime,
       };
-    });
+    })
+    .filter(Boolean);
 }
 
 function getSessions() {
