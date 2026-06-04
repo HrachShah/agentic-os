@@ -97,7 +97,11 @@ def get_api_key() -> str:
         # Try reading from Agentic OS config
         key_file = CONFIG_DIR / "api_key"
         if key_file.exists():
-            key = key_file.read_text().strip()
+            try:
+                key = key_file.read_text().strip()
+            except OSError as e:
+                print(f"✗ Could not read {key_file}: {e}", file=sys.stderr)
+                key = None
     if not key:
         print("✗ ANTHROPIC_API_KEY not set.", file=sys.stderr)
         print("  Export it: export ANTHROPIC_API_KEY='sk-ant-...'", file=sys.stderr)
