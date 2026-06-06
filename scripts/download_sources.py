@@ -177,7 +177,17 @@ def main():
             filepath = os.path.join(SOURCES_DIR, filename)
             if not os.path.exists(filepath) or os.path.getsize(filepath) < 1000:
                 print(f"  RETRY: {filename}")
-                subprocess.run(["wget", "-q", "--show-progress", url], cwd=SOURCES_DIR, timeout=180)
+                try:
+                    subprocess.run(
+                        ["wget", "-q", "--show-progress", "-c", url],
+                        cwd=SOURCES_DIR,
+                        timeout=180,
+                        check=False,
+                    )
+                except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+                    # wget missing or timed out — log and continue with the
+                    # next URL so one bad host doesn't abort the whole retry
+                    print(f"  RETRY FAIL: {filename}: {e}")
     
     # Final count
     print(f"\nFinal count: {len(os.listdir(SOURCES_DIR))} files in {SOURCES_DIR}")
