@@ -59,7 +59,15 @@ export default function ClaudeChat({ winId }: Props) {
       } else {
         setMessages(m => [...m, { role: 'assistant', content: 'API not available. Start the backend server with `bun run server`.', ts: new Date() }])
       }
-    } catch {
+    } catch (_err) {
+      // The fetch() call above can throw a TypeError ("Failed to fetch")
+      // when the backend is not running, the request was aborted, or
+      // the network is offline. The res.json() call can additionally
+      // throw SyntaxError on a malformed body. Either way, the
+      // user-facing UX is the same: surface a helpful 'start the
+      // backend' message and stop the loading spinner. The catch
+      // variable is named so future readers can see it is
+      // deliberately ignored.
       setMessages(m => [...m, {
         role: 'assistant',
         content: 'Cannot reach backend. In the terminal, run:\n`cd ~/agentic-os/gui && bun run server`',

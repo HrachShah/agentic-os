@@ -95,14 +95,23 @@ export default function Terminal({ winId }: Props) {
             })
           }
           term.onData((data) => { if (ws.readyState === WebSocket.OPEN) ws.send(data) })
-        } catch {
-          // No WS support
+        } catch (_err) {
+          // No WS support — fall back to the echo-mode branch above.
+          // The original try block calls new WebSocket() and the FitAddon
+          // constructor, both of which can throw TypeError on
+          // unsupported environments. The catch type is intentionally
+          // untyped (catch without a binding) so it stays compatible
+          // with the project's tsconfig; we just give it a name so
+          // future readers can see the variable is deliberately ignored.
         }
 
         const ro = new ResizeObserver(() => fit.fit())
         ro.observe(containerRef.current)
         return () => ro.disconnect()
-      } catch {
+      } catch (_err) {
+        // Outer tryXterm() can throw if xterm fails to mount (no DOM
+        // container, addon load failed). The fallback path is the plain
+        // <pre> block rendered below when fallback is true.
         if (mounted) setFallback(true)
       }
     }
