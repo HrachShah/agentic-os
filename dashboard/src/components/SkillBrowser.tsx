@@ -129,29 +129,31 @@ export function SkillBrowser() {
       </div>
 
       {/* Pinned section */}
-      {skillCategory === 'all' && !skillSearch && (
+      {skillCategory === 'all' && !skillSearch && (() => {
+        const pinnedSkills = PINNED
+          .map(name => skills.find(s => s.name === name))
+          .filter((s): s is NonNullable<typeof s> => Boolean(s));
+        if (pinnedSkills.length === 0) return null;
+        return (
         <div className="px-4 pt-3 pb-1 shrink-0">
           <div className="text-[10px] uppercase tracking-widest text-os-text-faint mb-2 flex items-center gap-1.5">
             <Star size={9} className="text-os-yellow fill-os-yellow" />
             Pinned
           </div>
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {PINNED.map(name => {
-              const skill = skills.find(s => s.name === name);
-              if (!skill) return null;
-              return (
+            {pinnedSkills.map(skill => (
                 <button
-                  key={name}
+                  key={skill.name}
                   onClick={() => setSelectedSkill(skill)}
                   className="skill-chip"
                 >
-                  <span className="font-mono">/{name}</span>
+                  <span className="font-mono">/{skill.name}</span>
                 </button>
-              );
-            })}
+            ))}
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Skills grid */}
       <div className="flex-1 overflow-y-auto scrollbar-thin px-4 pb-4">
