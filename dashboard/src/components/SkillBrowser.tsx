@@ -69,11 +69,11 @@ export function SkillBrowser() {
   const { skills, skillSearch, skillCategory, setSkillSearch, setSkillCategory, setSelectedSkill } = useStore();
 
   const filtered = skills.filter(s => {
-    const matchSearch = !skillSearch ||
-      s.name.includes(skillSearch.toLowerCase()) ||
-      s.description.toLowerCase().includes(skillSearch.toLowerCase());
-    const matchCat = skillCategory === 'all' || s.category === skillCategory;
-    return matchSearch && matchCat;
+    if (!skillSearch) return true;
+    const q = skillSearch.toLowerCase();
+    const name = s.name.toLowerCase();
+    const desc = (s.description || '').toLowerCase();
+    return name.includes(q) || desc.includes(q);
   });
 
   const categoryCounts = CATEGORIES.reduce((acc, cat) => {
