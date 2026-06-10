@@ -10,17 +10,21 @@ export function SkillDetail({ skill }: { skill: Skill }) {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/skill/${skill.name}`)
-      .then(r => r.json())
-      .then(data => {
-        setContent(data.content || `Skill: /${skill.name}\n\nFiles: ${(data.files || []).map((f: { name: string }) => f.name).join(', ')}`);
+    fetch(`/api/skill/${encodeURIComponent(skill.name)}`)
+      .then(r => r.json().then(data => ({ ok: r.ok, status: r.status, data })))
+      .then(({ ok, data }) => {
+        if (!ok) {
+          setContent(`/${skill.name}\n\n${skill.description || 'No description available'}`);
+        } else {
+          setContent(data.content || `Skill: /${skill.name}\n\nFiles: ${(data.files || []).map((f: { name: string }) => f.name).join(', ')}`);
+        }
         setLoading(false);
       })
       .catch(() => {
         setContent(`/${skill.name}\n\n${skill.description || 'No description available'}`);
         setLoading(false);
       });
-  }, [skill.name]);
+  }, [skill.name, skill.description]);
 
   const copyCommand = () => {
     navigator.clipboard?.writeText(`/${skill.name}`);
