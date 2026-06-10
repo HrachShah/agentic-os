@@ -1,5 +1,5 @@
 import { useStore, ActivityItem } from '../store/useStore';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 
 function safeRelativeTime(ts: number): string {
@@ -104,19 +104,28 @@ function LiveIndicator({ active }: { active: boolean }) {
 
 export function ActivityFeed() {
   const { activity, setActivity, connected } = useStore();
-  const prevLengthRef = useRef(activity.length);
+  const prevIdsRef = useRef<Set<string>>(new Set());
+  const [newestId, setNewestId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isLive = connected && activity.length > 0 &&
     Date.now() - activity[0]?.ts < 30000;
 
-  // Auto-scroll to top when new activity comes in
+  // Track which item id is the newest, so only that card animates in
   useEffect(() => {
-    if (activity.length > prevLengthRef.current) {
+    if (activity.length === 0) {
+      prevIdsRef.current = new Set();
+      setNewestId(null);
+      return;
+    }
+    const head = activity[0];
+    if (!prevIdsRef.current.has(head.id)) {
+      // New head — this is the only card that should animate
+      setNewestId(head.id);
       scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    prevLengthRef.current = activity.length;
-  }, [activity.length]);
+    prevIdsRef.current = new Set(activity.map(a => a.id));
+  }, [activity]);
 
   const recent = activity.slice(0, 200);
 
@@ -160,7 +169,7 @@ export function ActivityFeed() {
         ) : (
           <AnimatePresence initial={false}>
             {recent.map((item, i) => (
-              <ActivityCard key={item.id} item={item} isNew={i === 0} />
+              <ActivityCard key={item.id} item={item} isNew={item.id === newestId} />
             ))}
           </AnimatePresence>
         )}
