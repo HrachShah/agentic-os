@@ -53,10 +53,23 @@ export function SkillDetail({ skill }: { skill: Skill }) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3">
         {loading ? (
-          <div className="space-y-2">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-3 bg-os-active rounded animate-pulse" style={{ width: `${60 + Math.random() * 40}%` }} />
-            ))}
+          // Stable widths via deterministic index-based formula instead of
+          // Math.random(), so the skeleton doesn't jitter between two
+          // different random patterns on every re-render of the parent
+          // (which would happen because SkillDetail re-renders when
+          // the store updates and Math.random() runs again on every
+          // call). The pattern is a 6-step cycle: 70, 85, 60, 90, 75, 80.
+          <div className="space-y-2" aria-hidden="true">
+            {Array.from({ length: 8 }).map((_, i) => {
+              const widths = [70, 85, 60, 90, 75, 80, 65, 88];
+              return (
+                <div
+                  key={i}
+                  className="h-3 bg-os-active rounded animate-pulse"
+                  style={{ width: `${widths[i % widths.length]}%` }}
+                />
+              );
+            })}
           </div>
         ) : (
           <pre className="text-xs font-mono text-os-text-dim whitespace-pre-wrap leading-relaxed">
