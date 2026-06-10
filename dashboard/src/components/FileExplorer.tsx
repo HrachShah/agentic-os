@@ -6,12 +6,19 @@ import { clsx } from 'clsx';
 function FileItem({ node, depth = 0 }: { node: FileNode; depth?: number }) {
   const [open, setOpen] = useState(depth < 2);
 
-  const ext = node.name.split('.').pop()?.toLowerCase();
+  // For a name like '.bashrc' or '.gitignore' the last '.' segment is the
+  // whole name minus the leading dot, which would render with a fake 'rc' or
+  // 'gitignore' extension. Skip the split entirely for dotfiles and files
+  // with no extension.
+  const baseName = node.name;
+  const lastDot = baseName.lastIndexOf('.');
+  const hasExt = lastDot > 0 && lastDot < baseName.length - 1;
+  const ext = hasExt ? baseName.slice(lastDot + 1).toLowerCase() : '';
   const iconColor = !node.isDir ? {
     ts: 'text-blue-400', tsx: 'text-blue-300', js: 'text-yellow-400',
     jsx: 'text-yellow-300', py: 'text-green-400', md: 'text-purple-300',
     json: 'text-orange-300', css: 'text-pink-300', html: 'text-red-300',
-  }[ext || ''] || 'text-os-text-faint' : 'text-os-text-faint';
+  }[ext] || 'text-os-text-faint' : 'text-os-text-faint';
 
   return (
     <div>
