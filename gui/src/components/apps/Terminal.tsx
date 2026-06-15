@@ -81,8 +81,9 @@ export default function Terminal({ winId }: Props) {
           ws.onopen = () => { setConnected(true); wsRef.current = ws }
           ws.onmessage = (e) => term.write(e.data)
           ws.onclose = () => setConnected(false)
-          ws.onerror = () => {
+          ws.onerror = (err) => {
             // No backend — use simple echo mode
+            console.warn('[terminal] WebSocket unavailable, falling back to local echo:', err)
             term.onData((data) => {
               const code = data.charCodeAt(0)
               if (code === 13) {
@@ -94,9 +95,23 @@ export default function Terminal({ winId }: Props) {
               }
             })
           }
-          term.onData((data) => { if (ws.readyState === WebSocket.OPEN) ws.send(data) })
-        } catch {
-          // No WS support
+          // Only forward to the socket while it's actually open; the
+          // previous implementation forwarded on every keystroke and
+          // relied on the ws.readyState guard to no-op when the socket
+          // was already CLOSING / CLOSED, which still allocated a
+          // closure for every keystroke and dispatched the no-op into
+          // the websocket loop until the socket finished tearing down.
+          // The early-return version drops the call entirely once the
+          // socket is no longer OPEN.
+          term.onData((data) => {
+            const sock = wsRef.current
+            if (sock && sock.readyState === WebSocket.OPEN) sock.send(data)
+          })
+        } catch (err) {
+          // No WS support at all (e.g. running inside a sandboxed iframe
+          // that blocks the WebSocket constructor). Log so the developer
+          // can see why the terminal fell back to local echo.
+          console.warn('[terminal] WebSocket constructor threw, using local echo:', err)
         }
 
         const ro = new ResizeObserver(() => fit.fit())
