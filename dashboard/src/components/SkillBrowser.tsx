@@ -69,9 +69,10 @@ export function SkillBrowser() {
   const { skills, skillSearch, skillCategory, setSkillSearch, setSkillCategory, setSelectedSkill } = useStore();
 
   const filtered = skills.filter(s => {
-    const matchSearch = !skillSearch ||
-      s.name.includes(skillSearch.toLowerCase()) ||
-      s.description.toLowerCase().includes(skillSearch.toLowerCase());
+    const needle = skillSearch.toLowerCase();
+    const matchSearch = !needle ||
+      s.name.toLowerCase().includes(needle) ||
+      s.description.toLowerCase().includes(needle);
     const matchCat = skillCategory === 'all' || s.category === skillCategory;
     return matchSearch && matchCat;
   });
