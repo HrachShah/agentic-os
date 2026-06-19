@@ -1,5 +1,5 @@
 import { useStore, ActivityItem } from '../store/useStore';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 
 function safeRelativeTime(ts: number): string {
@@ -106,9 +106,17 @@ export function ActivityFeed() {
   const { activity, setActivity, connected } = useStore();
   const prevLengthRef = useRef(activity.length);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [now, setNow] = useState(Date.now());
+
+  // Tick once a while so the Live/Idle indicator can re-evaluate the
+  // 30s staleness window without requiring a fresh event to arrive.
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 5000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const isLive = connected && activity.length > 0 &&
-    Date.now() - activity[0]?.ts < 30000;
+    now - activity[0]?.ts < 30000;
 
   // Auto-scroll to top when new activity comes in
   useEffect(() => {
