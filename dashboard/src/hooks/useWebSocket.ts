@@ -36,7 +36,13 @@ export function useWebSocket() {
       try {
         const msg = JSON.parse(e.data);
         handleMessage(msg);
-      } catch {}
+      } catch (err) {
+        // Don't drop malformed frames silently — if the server starts emitting
+        // non-JSON (or partial JSON on disconnect) the dashboard would just
+        // freeze with no visible signal. Surface the parse error so a
+        // developer tailing the console can see why messages stopped.
+        console.error('[WS] failed to parse message:', err, 'payload:', String(e.data).slice(0, 200));
+      }
     };
   }
 

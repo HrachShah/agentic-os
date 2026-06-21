@@ -1,6 +1,7 @@
 import { useStore, ActivePanel } from '../store/useStore';
 import { Activity, Layers, History, FolderOpen, Settings, Zap } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useEffect, useState } from 'react';
 
 const NAV = [
   { id: 'activity' as ActivePanel, icon: Activity, label: 'Activity', color: 'text-os-green' },
@@ -9,11 +10,23 @@ const NAV = [
   { id: 'files' as ActivePanel, icon: FolderOpen, label: 'Files', color: 'text-os-yellow' },
 ];
 
+const RECENT_WINDOW_MS = 60_000;
+const RECENT_TICK_MS = 15_000;
+
 export function Sidebar() {
   const { activePanel, setActivePanel, sidebarCollapsed, activity, skills, sessions } = useStore();
+  // The "recent activity" badge depends on Date.now() - a.ts < RECENT_WINDOW_MS.
+  // Without a periodic re-render the count stays stale until the next activity
+  // item arrives, so the badge can read "3" forever even after the window
+  // has expired. A 15s tick (well under the 60s window) keeps it honest.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), RECENT_TICK_MS);
+    return () => clearInterval(t);
+  }, []);
 
   const badges: Partial<Record<ActivePanel, number>> = {
-    activity: activity.filter(a => Date.now() - a.ts < 60000).length || 0,
+    activity: activity.filter(a => now - a.ts < RECENT_WINDOW_MS).length || 0,
     sessions: sessions.filter(s => s.active).length || 0,
     skills: skills.length,
   };
