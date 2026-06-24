@@ -8,6 +8,7 @@ const path = require('path');
 const os = require('os');
 const { randomUUID } = require('crypto');
 const readline = require('readline');
+const { extractSkillDescription } = require('./extract-skill-description');
 
 const app = express();
 const server = http.createServer(app);
@@ -102,15 +103,14 @@ function getSkills() {
       let description = '';
       let category = 'general';
 
-      // Try to read skill description from index.md or README
-      const descFiles = ['index.md', 'README.md', 'skill.md'];
+      // Try to read skill description from the skill manifest, then README/index files
+      const descFiles = ['SKILL.md', 'skill.md', 'index.md', 'README.md'];
       for (const f of descFiles) {
         const fp = path.join(skillPath, f);
         if (fs.existsSync(fp)) {
           try {
             const content = fs.readFileSync(fp, 'utf8');
-            const firstLine = content.split('\n').find(l => l.trim() && !l.startsWith('#'));
-            description = firstLine?.trim() || '';
+            description = extractSkillDescription(content);
             // Detect category from content
             if (/design|ui|ux|css|style/i.test(content)) category = 'design';
             else if (/test|qa|review|audit/i.test(content)) category = 'quality';
