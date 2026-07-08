@@ -36,7 +36,13 @@ export function useWebSocket() {
       try {
         const msg = JSON.parse(e.data);
         handleMessage(msg);
-      } catch {}
+      } catch (err) {
+        if (err instanceof SyntaxError) {
+          console.warn('[WS] dropped malformed JSON payload:', err.message);
+        } else {
+          throw err;
+        }
+      }
     };
   }
 
