@@ -8,6 +8,7 @@ const path = require('path');
 const os = require('os');
 const { randomUUID } = require('crypto');
 const readline = require('readline');
+const { parseHistoryLimit } = require('./query_limits');
 
 const app = express();
 const server = http.createServer(app);
@@ -28,6 +29,19 @@ const SKILLS_DIR = path.join(CLAUDE_HOME, 'skills');
 const SESSIONS_DIR = path.join(CLAUDE_HOME, 'sessions');
 const PROJECTS_DIR = path.join(CLAUDE_HOME, 'projects');
 const HISTORY_FILE = path.join(CLAUDE_HOME, 'history.jsonl');
+
+// Resolve `leaf` under `root` and reject anything that escapes the root via
+// `..` segments or an absolute path. Returns the safe absolute path, or null
+// if the input would land outside `root`. Used to keep /api/files and the
+// WebSocket get_files message from walking the host filesystem.
+function safeJoin(root, leaf) {
+  const resolved = path.resolve(root, leaf);
+  const rootResolved = path.resolve(root) + path.sep;
+  if (resolved !== path.resolve(root) && !resolved.startsWith(rootResolved)) {
+    return null;
+  }
+  return resolved;
+}
 
 // Connected WebSocket clients
 const clients = new Set();
@@ -71,9 +85,19 @@ function handleClientMessage(ws, msg) {
     case 'get_sessions':
       ws.send(JSON.stringify({ type: 'sessions', data: getSessions() }));
       break;
-    case 'get_files':
-      ws.send(JSON.stringify({ type: 'files', data: getFiles(msg.path || WORKSPACE) }));
+    case 'get_files': {
+      let targetPath = WORKSPACE;
+      if (msg.path) {
+        const safe = safeJoin(WORKSPACE, msg.path);
+        if (!safe) {
+          ws.send(JSON.stringify({ type: 'error', error: 'Invalid path' }));
+          return;
+        }
+        targetPath = safe;
+      }
+      ws.send(JSON.stringify({ type: 'files', data: getFiles(targetPath) }));
       break;
+    }
     case 'get_history':
       ws.send(JSON.stringify({ type: 'history', data: getRecentHistory(msg.limit || 100) }));
       break;
@@ -394,16 +418,22 @@ app.get('/api/health', (_, res) => {
 
 app.get('/api/skills', (_, res) => res.json(getSkills()));
 app.get('/api/sessions', (_, res) => res.json(getSessions()));
-app.get('/api/history', (req, res) => res.json(getRecentHistory(req.query.limit)));
+app.get('/api/history', (req, res) => res.json(getRecentHistory(parseHistoryLimit(req.query.limit))));
 app.get('/api/system', (_, res) => res.json(getSystemInfo()));
 
 app.get('/api/files', (req, res) => {
-  const dirPath = req.query.path || WORKSPACE;
-  res.json(getFiles(dirPath));
+  let targetPath = WORKSPACE;
+  if (req.query.path) {
+    const safe = safeJoin(WORKSPACE, req.query.path);
+    if (!safe) return res.status(400).json({ error: 'Invalid path' });
+    targetPath = safe;
+  }
+  res.json(getFiles(targetPath));
 });
 
 app.get('/api/session/:id', (req, res) => {
-  const fp = path.join(SESSIONS_DIR, `${req.params.id}.jsonl`);
+  const fp = safeJoin(SESSIONS_DIR, `${req.params.id}.jsonl`);
+  if (!fp) return res.status(400).json({ error: 'Invalid session id' });
   if (!fs.existsSync(fp)) return res.status(404).json({ error: 'Not found' });
   try {
     const lines = fs.readFileSync(fp, 'utf8').trim().split('\n')
@@ -415,7 +445,8 @@ app.get('/api/session/:id', (req, res) => {
 });
 
 app.get('/api/skill/:name', (req, res) => {
-  const skillPath = path.join(SKILLS_DIR, req.params.name);
+  const skillPath = safeJoin(SKILLS_DIR, req.params.name);
+  if (!skillPath) return res.status(400).json({ error: 'Invalid skill name' });
   if (!fs.existsSync(skillPath)) return res.status(404).json({ error: 'Not found' });
   const files = ['index.md', 'README.md', 'skill.md', 'prompt.md'];
   for (const f of files) {
