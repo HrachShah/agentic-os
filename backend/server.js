@@ -8,6 +8,7 @@ const path = require('path');
 const os = require('os');
 const { randomUUID } = require('crypto');
 const readline = require('readline');
+const { parseHistoryLimit } = require('./query_limits');
 
 const app = express();
 const server = http.createServer(app);
@@ -417,7 +418,7 @@ app.get('/api/health', (_, res) => {
 
 app.get('/api/skills', (_, res) => res.json(getSkills()));
 app.get('/api/sessions', (_, res) => res.json(getSessions()));
-app.get('/api/history', (req, res) => res.json(getRecentHistory(req.query.limit)));
+app.get('/api/history', (req, res) => res.json(getRecentHistory(parseHistoryLimit(req.query.limit))));
 app.get('/api/system', (_, res) => res.json(getSystemInfo()));
 
 app.get('/api/files', (req, res) => {
