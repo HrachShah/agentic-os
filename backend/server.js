@@ -35,9 +35,9 @@ const HISTORY_FILE = path.join(CLAUDE_HOME, 'history.jsonl');
 // if the input would land outside `root`. Used to keep /api/files and the
 // WebSocket get_files message from walking the host filesystem.
 function safeJoin(root, leaf) {
-  const resolved = path.resolve(root, leaf);
-  const rootResolved = path.resolve(root) + path.sep;
-  if (resolved !== path.resolve(root) && !resolved.startsWith(rootResolved)) {
+  const rootResolved = path.resolve(root);
+  const resolved = path.resolve(rootResolved, leaf);
+  if (resolved !== rootResolved && !resolved.startsWith(rootResolved + path.sep)) {
     return null;
   }
   return resolved;
