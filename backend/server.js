@@ -139,7 +139,6 @@ function getSessions() {
   try {
     return fs.readdirSync(SESSIONS_DIR)
       .filter(f => f.endsWith('.jsonl') || f.endsWith('.json'))
-      .slice(-20)
       .map(f => {
         const fp = path.join(SESSIONS_DIR, f);
         const stat = fs.statSync(fp);
@@ -151,7 +150,8 @@ function getSessions() {
           active: Date.now() - stat.mtime.getTime() < 1000 * 60 * 30,
         };
       })
-      .sort((a, b) => new Date(b.modified) - new Date(a.modified));
+      .sort((a, b) => new Date(b.modified) - new Date(a.modified))
+      .slice(0, 20);
   } catch { return []; }
 }
 
