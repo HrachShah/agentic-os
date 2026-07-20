@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { parseHistoryLimit } = require('./query_limits');
 
 test('parseHistoryLimit uses the default for missing or malformed values', () => {
-  for (const value of [undefined, '', 'nope', '0', '-1', '1.5', '1e2']) {
+  for (const value of [undefined, '', 'nope', '0', '-1', '1.5', '1e2', ['nope', '25']]) {
     assert.equal(parseHistoryLimit(value), 100);
   }
 });

@@ -99,7 +99,7 @@ function handleClientMessage(ws, msg) {
       break;
     }
     case 'get_history':
-      ws.send(JSON.stringify({ type: 'history', data: getRecentHistory(msg.limit || 100) }));
+      ws.send(JSON.stringify({ type: 'history', data: getRecentHistory(parseHistoryLimit(msg.limit)) }));
       break;
   }
 }
