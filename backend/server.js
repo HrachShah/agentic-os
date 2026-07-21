@@ -155,12 +155,19 @@ function getSessions() {
   } catch { return []; }
 }
 
+function normalizeLimit(limit, fallback = 100) {
+  const numericLimit = Number(limit);
+  if (!Number.isInteger(numericLimit) || numericLimit < 0) return fallback;
+  return numericLimit;
+}
+
 function getRecentHistory(limit = 100) {
   // Read from the most recently active project transcript (tool use data)
   return getRecentActivity(limit);
 }
 
 function getRecentActivity(limit = 100) {
+  limit = normalizeLimit(limit);
   if (!fs.existsSync(PROJECTS_DIR)) return [];
   try {
     // Find all project session JSONL files, sort by modified time
