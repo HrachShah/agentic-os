@@ -8,6 +8,7 @@ const path = require('path');
 const os = require('os');
 const { randomUUID } = require('crypto');
 const readline = require('readline');
+const { newestSessions } = require('./session_utils');
 
 const app = express();
 const server = http.createServer(app);
@@ -137,9 +138,8 @@ function getSkills() {
 function getSessions() {
   if (!fs.existsSync(SESSIONS_DIR)) return [];
   try {
-    return fs.readdirSync(SESSIONS_DIR)
+    const sessions = fs.readdirSync(SESSIONS_DIR)
       .filter(f => f.endsWith('.jsonl') || f.endsWith('.json'))
-      .slice(-20)
       .map(f => {
         const fp = path.join(SESSIONS_DIR, f);
         const stat = fs.statSync(fp);
@@ -150,8 +150,8 @@ function getSessions() {
           modified: stat.mtime,
           active: Date.now() - stat.mtime.getTime() < 1000 * 60 * 30,
         };
-      })
-      .sort((a, b) => new Date(b.modified) - new Date(a.modified));
+      });
+    return newestSessions(sessions, 20);
   } catch { return []; }
 }
 
