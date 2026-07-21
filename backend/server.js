@@ -403,6 +403,9 @@ app.get('/api/files', (req, res) => {
 });
 
 app.get('/api/session/:id', (req, res) => {
+  if (req.params.id.includes('..') || req.params.id.includes('/') || req.params.id.includes('\\')) {
+    return res.status(400).json({ error: 'Invalid session id' });
+  }
   const fp = path.join(SESSIONS_DIR, `${req.params.id}.jsonl`);
   if (!fs.existsSync(fp)) return res.status(404).json({ error: 'Not found' });
   try {
@@ -415,6 +418,9 @@ app.get('/api/session/:id', (req, res) => {
 });
 
 app.get('/api/skill/:name', (req, res) => {
+  if (req.params.name.includes('..') || req.params.name.includes('/') || req.params.name.includes('\\')) {
+    return res.status(400).json({ error: 'Invalid skill name' });
+  }
   const skillPath = path.join(SKILLS_DIR, req.params.name);
   if (!fs.existsSync(skillPath)) return res.status(404).json({ error: 'Not found' });
   const files = ['index.md', 'README.md', 'skill.md', 'prompt.md'];
