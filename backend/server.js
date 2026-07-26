@@ -9,6 +9,7 @@ const os = require('os');
 const { randomUUID } = require('crypto');
 const readline = require('readline');
 const { extractSkillDescription } = require('./extract-skill-description');
+const { resolveWithin } = require('./path-utils');
 
 const app = express();
 const server = http.createServer(app);
@@ -254,7 +255,9 @@ function parseTranscriptEntry(entry) {
 }
 
 function getFiles(dirPath, depth = 2) {
-  if (!fs.existsSync(dirPath)) return [];
+  const safePath = resolveWithin(WORKSPACE, dirPath);
+  if (!safePath || !fs.existsSync(safePath)) return [];
+  dirPath = safePath;
   try {
     const entries = fs.readdirSync(dirPath, { withFileTypes: true });
     return entries
@@ -399,12 +402,14 @@ app.get('/api/system', (_, res) => res.json(getSystemInfo()));
 
 app.get('/api/files', (req, res) => {
   const dirPath = req.query.path || WORKSPACE;
-  res.json(getFiles(dirPath));
+  const safePath = resolveWithin(WORKSPACE, dirPath);
+  if (!safePath) return res.status(400).json({ error: 'Path must stay within the workspace' });
+  res.json(getFiles(safePath));
 });
 
 app.get('/api/session/:id', (req, res) => {
-  const fp = path.join(SESSIONS_DIR, `${req.params.id}.jsonl`);
-  if (!fs.existsSync(fp)) return res.status(404).json({ error: 'Not found' });
+  const fp = resolveWithin(SESSIONS_DIR, `${req.params.id}.jsonl`);
+  if (!fp || !fs.existsSync(fp)) return res.status(404).json({ error: 'Not found' });
   try {
     const lines = fs.readFileSync(fp, 'utf8').trim().split('\n')
       .slice(-200)
@@ -415,8 +420,8 @@ app.get('/api/session/:id', (req, res) => {
 });
 
 app.get('/api/skill/:name', (req, res) => {
-  const skillPath = path.join(SKILLS_DIR, req.params.name);
-  if (!fs.existsSync(skillPath)) return res.status(404).json({ error: 'Not found' });
+  const skillPath = resolveWithin(SKILLS_DIR, req.params.name);
+  if (!skillPath || !fs.existsSync(skillPath)) return res.status(404).json({ error: 'Not found' });
   const files = ['index.md', 'README.md', 'skill.md', 'prompt.md'];
   for (const f of files) {
     const fp = path.join(skillPath, f);
