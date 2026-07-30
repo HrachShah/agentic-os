@@ -9,7 +9,7 @@ const os = require('os');
 const { randomUUID } = require('crypto');
 const readline = require('readline');
 const { extractSkillDescription } = require('./extract-skill-description');
-const { resolveWithin } = require('./path-utils');
+const { resolveExistingWithin, resolveWithin } = require('./path-utils');
 
 const app = express();
 const server = http.createServer(app);
@@ -402,13 +402,13 @@ app.get('/api/system', (_, res) => res.json(getSystemInfo()));
 
 app.get('/api/files', (req, res) => {
   const dirPath = req.query.path || WORKSPACE;
-  const safePath = resolveWithin(WORKSPACE, dirPath);
+  const safePath = resolveExistingWithin(WORKSPACE, dirPath);
   if (!safePath) return res.status(400).json({ error: 'Path must stay within the workspace' });
   res.json(getFiles(safePath));
 });
 
 app.get('/api/session/:id', (req, res) => {
-  const fp = resolveWithin(SESSIONS_DIR, `${req.params.id}.jsonl`);
+  const fp = resolveExistingWithin(SESSIONS_DIR, `${req.params.id}.jsonl`);
   if (!fp || !fs.existsSync(fp)) return res.status(404).json({ error: 'Not found' });
   try {
     const lines = fs.readFileSync(fp, 'utf8').trim().split('\n')
@@ -420,7 +420,7 @@ app.get('/api/session/:id', (req, res) => {
 });
 
 app.get('/api/skill/:name', (req, res) => {
-  const skillPath = resolveWithin(SKILLS_DIR, req.params.name);
+  const skillPath = resolveExistingWithin(SKILLS_DIR, req.params.name);
   if (!skillPath || !fs.existsSync(skillPath)) return res.status(404).json({ error: 'Not found' });
   const files = ['index.md', 'README.md', 'skill.md', 'prompt.md'];
   for (const f of files) {
