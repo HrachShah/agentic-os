@@ -29,6 +29,24 @@ const SESSIONS_DIR = path.join(CLAUDE_HOME, 'sessions');
 const PROJECTS_DIR = path.join(CLAUDE_HOME, 'projects');
 const HISTORY_FILE = path.join(CLAUDE_HOME, 'history.jsonl');
 
+function resolveWorkspacePath(candidate) {
+  if (typeof candidate !== 'string') return null;
+  const workspaceRoot = path.resolve(WORKSPACE);
+  const requestedPath = path.resolve(candidate);
+  if (requestedPath !== workspaceRoot && !requestedPath.startsWith(`${workspaceRoot}${path.sep}`)) {
+    return null;
+  }
+  try {
+    const resolvedPath = fs.realpathSync(requestedPath);
+    if (resolvedPath !== workspaceRoot && !resolvedPath.startsWith(`${workspaceRoot}${path.sep}`)) {
+      return null;
+    }
+    return resolvedPath;
+  } catch {
+    return null;
+  }
+}
+
 // Connected WebSocket clients
 const clients = new Set();
 
@@ -71,9 +89,15 @@ function handleClientMessage(ws, msg) {
     case 'get_sessions':
       ws.send(JSON.stringify({ type: 'sessions', data: getSessions() }));
       break;
-    case 'get_files':
-      ws.send(JSON.stringify({ type: 'files', data: getFiles(msg.path || WORKSPACE) }));
+    case 'get_files': {
+      const requestedPath = resolveWorkspacePath(msg.path || WORKSPACE);
+      ws.send(JSON.stringify({
+        type: 'files',
+        data: requestedPath ? getFiles(requestedPath) : [],
+        error: requestedPath ? undefined : 'Path must be inside the workspace',
+      }));
       break;
+    }
     case 'get_history':
       ws.send(JSON.stringify({ type: 'history', data: getRecentHistory(msg.limit || 100) }));
       break;
@@ -398,7 +422,8 @@ app.get('/api/history', (req, res) => res.json(getRecentHistory(req.query.limit)
 app.get('/api/system', (_, res) => res.json(getSystemInfo()));
 
 app.get('/api/files', (req, res) => {
-  const dirPath = req.query.path || WORKSPACE;
+  const dirPath = resolveWorkspacePath(req.query.path || WORKSPACE);
+  if (!dirPath) return res.status(403).json({ error: 'Path must be inside the workspace' });
   res.json(getFiles(dirPath));
 });
 
