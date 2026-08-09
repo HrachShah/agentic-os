@@ -47,6 +47,27 @@ function resolveWorkspacePath(candidate) {
   }
 }
 
+function resolveChildPath(root, child) {
+  if (typeof child !== 'string' || child.length === 0) return null;
+  let rootPath;
+  try {
+    rootPath = fs.realpathSync(root);
+  } catch {
+    return null;
+  }
+  const requestedPath = path.resolve(rootPath, child);
+  if (requestedPath === rootPath || !requestedPath.startsWith(`${rootPath}${path.sep}`)) {
+    return null;
+  }
+  try {
+    const resolvedPath = fs.realpathSync(requestedPath);
+    if (!resolvedPath.startsWith(`${rootPath}${path.sep}`)) return null;
+    return resolvedPath;
+  } catch {
+    return null;
+  }
+}
+
 // Connected WebSocket clients
 const clients = new Set();
 
@@ -428,8 +449,8 @@ app.get('/api/files', (req, res) => {
 });
 
 app.get('/api/session/:id', (req, res) => {
-  const fp = path.join(SESSIONS_DIR, `${req.params.id}.jsonl`);
-  if (!fs.existsSync(fp)) return res.status(404).json({ error: 'Not found' });
+  const fp = resolveChildPath(SESSIONS_DIR, `${req.params.id}.jsonl`);
+  if (!fp || !fs.existsSync(fp)) return res.status(404).json({ error: 'Not found' });
   try {
     const lines = fs.readFileSync(fp, 'utf8').trim().split('\n')
       .slice(-200)
@@ -440,8 +461,8 @@ app.get('/api/session/:id', (req, res) => {
 });
 
 app.get('/api/skill/:name', (req, res) => {
-  const skillPath = path.join(SKILLS_DIR, req.params.name);
-  if (!fs.existsSync(skillPath)) return res.status(404).json({ error: 'Not found' });
+  const skillPath = resolveChildPath(SKILLS_DIR, req.params.name);
+  if (!skillPath || !fs.existsSync(skillPath)) return res.status(404).json({ error: 'Not found' });
   const files = ['index.md', 'README.md', 'skill.md', 'prompt.md'];
   for (const f of files) {
     const fp = path.join(skillPath, f);
